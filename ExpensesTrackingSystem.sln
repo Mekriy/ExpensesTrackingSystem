@@ -5,7 +5,7 @@ VisualStudioVersion = 17.7.34221.43
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Security", "Security\Security.csproj", "{98693A4B-67F0-4581-B7A9-5D38B0C33752}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "API.DAL", "ExpenseTrackingSystem.Data\API.DAL.csproj", "{30901E05-E3BE-4BB4-BC79-CAA0B93F1469}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "API.DAL", "API.DAL\API.DAL.csproj", "{BAF6AC4F-5C68-414D-AD92-C048CBE791BF}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -17,10 +17,10 @@ Global
 		{98693A4B-67F0-4581-B7A9-5D38B0C33752}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{98693A4B-67F0-4581-B7A9-5D38B0C33752}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{98693A4B-67F0-4581-B7A9-5D38B0C33752}.Release|Any CPU.Build.0 = Release|Any CPU
-		{30901E05-E3BE-4BB4-BC79-CAA0B93F1469}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{30901E05-E3BE-4BB4-BC79-CAA0B93F1469}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{30901E05-E3BE-4BB4-BC79-CAA0B93F1469}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{30901E05-E3BE-4BB4-BC79-CAA0B93F1469}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BAF6AC4F-5C68-414D-AD92-C048CBE791BF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BAF6AC4F-5C68-414D-AD92-C048CBE791BF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BAF6AC4F-5C68-414D-AD92-C048CBE791BF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BAF6AC4F-5C68-414D-AD92-C048CBE791BF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
