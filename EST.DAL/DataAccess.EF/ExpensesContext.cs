@@ -1,11 +1,7 @@
 ﻿using API.DAL.DataAccess.Configurations;
+using API.DAL.DataAccess.EF.Configurations;
 using API.DAL.Models;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace API.DAL.DataAccess
 {
@@ -38,6 +34,10 @@ namespace API.DAL.DataAccess
             modelBuilder.ApplyConfiguration(new ItemConfiguration());
             modelBuilder.ApplyConfiguration(new ItemExpenseConfiguration());
             modelBuilder.ApplyConfiguration(new UserConfiguration());
+            modelBuilder.ApplyConfiguration(new ReviewConfiguration());
+            modelBuilder.ApplyConfiguration(new ExpenseConfiguration());
+            modelBuilder.ApplyConfiguration(new LocationConfiguration());
+            
             base.OnModelCreating(modelBuilder);
         }
     }

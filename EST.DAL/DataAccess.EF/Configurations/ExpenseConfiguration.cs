@@ -7,15 +7,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace API.DAL.DataAccess.Configurations
+namespace API.DAL.DataAccess.EF.Configurations
 {
-    public class ItemConfiguration : IEntityTypeConfiguration<Item>
+    public class ExpenseConfiguration : IEntityTypeConfiguration<Expense>
     {
-        public void Configure(EntityTypeBuilder<Item> builder)
+        public void Configure(EntityTypeBuilder<Expense> builder)
         {
             builder
-                .HasMany(i => i.Reviews)
-                .WithOne(i => i.Item);
+                .HasKey(e => e.Id);
         }
     }
 }

@@ -37,7 +37,7 @@ namespace API.DAL.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Categories");
+                    b.ToTable("Categories", (string)null);
                 });
 
             modelBuilder.Entity("API.DAL.Models.Expense", b =>
@@ -64,7 +64,7 @@ namespace API.DAL.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Expenses");
+                    b.ToTable("Expenses", (string)null);
                 });
 
             modelBuilder.Entity("API.DAL.Models.ExpenseLocation", b =>
@@ -79,7 +79,7 @@ namespace API.DAL.Migrations
 
                     b.HasIndex("LocationId");
 
-                    b.ToTable("ExpensesLocations");
+                    b.ToTable("ExpensesLocations", (string)null);
                 });
 
             modelBuilder.Entity("API.DAL.Models.Item", b =>
@@ -102,7 +102,7 @@ namespace API.DAL.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Items");
+                    b.ToTable("Items", (string)null);
                 });
 
             modelBuilder.Entity("API.DAL.Models.ItemExpense", b =>
@@ -117,7 +117,7 @@ namespace API.DAL.Migrations
 
                     b.HasIndex("ExpenseId");
 
-                    b.ToTable("ItemExpenses");
+                    b.ToTable("ItemExpenses", (string)null);
                 });
 
             modelBuilder.Entity("API.DAL.Models.Location", b =>
@@ -144,7 +144,7 @@ namespace API.DAL.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Locations");
+                    b.ToTable("Locations", (string)null);
                 });
 
             modelBuilder.Entity("API.DAL.Models.Review", b =>
@@ -163,7 +163,7 @@ namespace API.DAL.Migrations
 
                     b.HasIndex("ItemId");
 
-                    b.ToTable("Reviews");
+                    b.ToTable("Reviews", (string)null);
                 });
 
             modelBuilder.Entity("API.DAL.Models.User", b =>
@@ -186,7 +186,7 @@ namespace API.DAL.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Users");
+                    b.ToTable("Users", (string)null);
                 });
 
             modelBuilder.Entity("API.DAL.Models.Expense", b =>

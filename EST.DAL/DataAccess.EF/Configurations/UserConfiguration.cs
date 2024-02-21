@@ -1,6 +1,6 @@
 ﻿using API.DAL.Models;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,13 +9,15 @@ using System.Threading.Tasks;
 
 namespace API.DAL.DataAccess.Configurations
 {
-    public class CategoryConfiguration : IEntityTypeConfiguration<Category>
+    public class UserConfiguration : IEntityTypeConfiguration<User>
     {
-        public void Configure(EntityTypeBuilder<Category> builder)
+        public void Configure(EntityTypeBuilder<User> builder)
         {
             builder
+                .HasKey(x => x.Id);
+            builder
                 .HasMany(e => e.Expenses)
-                .WithOne(c => c.Category);
+                .WithOne(u => u.User);
         }
     }
 }
