@@ -1,9 +1,8 @@
-﻿using API.DAL.DataAccess.Configurations;
-using API.DAL.DataAccess.EF.Configurations;
-using API.DAL.Models;
+﻿using EST.DAL.DataAccess.EF.Configurations;
+using EST.DAL.Models;
 using Microsoft.EntityFrameworkCore;
 
-namespace API.DAL.DataAccess
+namespace EST.DAL.DataAccess.EF
 {
     public class ExpensesContext : DbContext
     {
@@ -21,11 +20,6 @@ namespace API.DAL.DataAccess
         }
         public ExpensesContext(DbContextOptions<ExpensesContext> options) : base(options)
         {
-        }
-        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        {
-            optionsBuilder.UseSqlServer("Server=localhost;Database=ExpensesTrackingSystemDB;Trusted_Connection=True;");
-            base.OnConfiguring(optionsBuilder);
         }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

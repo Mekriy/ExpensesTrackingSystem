@@ -1,3 +1,8 @@
+using EST.BL.Interfaces;
+using EST.BL.Services;
+using EST.DAL.DataAccess.EF;
+using Microsoft.EntityFrameworkCore;
+
 namespace ETS.WebAPI
 {
     public class Program
@@ -6,12 +11,20 @@ namespace ETS.WebAPI
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            // Add services to the container.
-
+            //create seeder
+            builder.Services.AddTransient<DbSeeder>();
             builder.Services.AddControllers();
-            // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+            builder.Services.AddScoped<IUserService, UserService>();
+            builder.Services.AddScoped<IItemService, ItemService>();
+            builder.Services.AddScoped<IExpenseService, ExpenseService>();
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
+
+            builder.Services.AddDbContext<ExpensesContext>(options =>
+            {
+                options.UseSqlServer(builder.Configuration.GetConnectionString("db"));
+            });
+
 
             var app = builder.Build();
 
@@ -25,8 +38,6 @@ namespace ETS.WebAPI
             app.UseHttpsRedirection();
 
             app.UseAuthorization();
-
-
             app.MapControllers();
 
             app.Run();

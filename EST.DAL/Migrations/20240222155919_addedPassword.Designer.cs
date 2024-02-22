@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace EST.DAL.Migrations
 {
     [DbContext(typeof(ExpensesContext))]
-    [Migration("20240217174529_init")]
-    partial class init
+    [Migration("20240222155919_addedPassword")]
+    partial class addedPassword
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -24,7 +24,7 @@ namespace EST.DAL.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder, 1L, 1);
 
-            modelBuilder.Entity("API.DAL.Models.Category", b =>
+            modelBuilder.Entity("EST.DAL.Models.Category", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -42,7 +42,7 @@ namespace EST.DAL.Migrations
                     b.ToTable("Categories");
                 });
 
-            modelBuilder.Entity("API.DAL.Models.Expense", b =>
+            modelBuilder.Entity("EST.DAL.Models.Expense", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -69,7 +69,7 @@ namespace EST.DAL.Migrations
                     b.ToTable("Expenses");
                 });
 
-            modelBuilder.Entity("API.DAL.Models.ExpenseLocation", b =>
+            modelBuilder.Entity("EST.DAL.Models.ExpenseLocation", b =>
                 {
                     b.Property<Guid>("ExpenseId")
                         .HasColumnType("uniqueidentifier");
@@ -84,7 +84,7 @@ namespace EST.DAL.Migrations
                     b.ToTable("ExpensesLocations");
                 });
 
-            modelBuilder.Entity("API.DAL.Models.Item", b =>
+            modelBuilder.Entity("EST.DAL.Models.Item", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -107,7 +107,7 @@ namespace EST.DAL.Migrations
                     b.ToTable("Items");
                 });
 
-            modelBuilder.Entity("API.DAL.Models.ItemExpense", b =>
+            modelBuilder.Entity("EST.DAL.Models.ItemExpense", b =>
                 {
                     b.Property<Guid>("ItemId")
                         .HasColumnType("uniqueidentifier");
@@ -122,7 +122,7 @@ namespace EST.DAL.Migrations
                     b.ToTable("ItemExpenses");
                 });
 
-            modelBuilder.Entity("API.DAL.Models.Location", b =>
+            modelBuilder.Entity("EST.DAL.Models.Location", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -149,7 +149,7 @@ namespace EST.DAL.Migrations
                     b.ToTable("Locations");
                 });
 
-            modelBuilder.Entity("API.DAL.Models.Review", b =>
+            modelBuilder.Entity("EST.DAL.Models.Review", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -168,7 +168,7 @@ namespace EST.DAL.Migrations
                     b.ToTable("Reviews");
                 });
 
-            modelBuilder.Entity("API.DAL.Models.User", b =>
+            modelBuilder.Entity("EST.DAL.Models.User", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -182,6 +182,10 @@ namespace EST.DAL.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("Password")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("RoleName")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -191,15 +195,15 @@ namespace EST.DAL.Migrations
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("API.DAL.Models.Expense", b =>
+            modelBuilder.Entity("EST.DAL.Models.Expense", b =>
                 {
-                    b.HasOne("API.DAL.Models.Category", "Category")
+                    b.HasOne("EST.DAL.Models.Category", "Category")
                         .WithMany("Expenses")
                         .HasForeignKey("CategoryId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("API.DAL.Models.User", "User")
+                    b.HasOne("EST.DAL.Models.User", "User")
                         .WithMany("Expenses")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -210,15 +214,15 @@ namespace EST.DAL.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("API.DAL.Models.ExpenseLocation", b =>
+            modelBuilder.Entity("EST.DAL.Models.ExpenseLocation", b =>
                 {
-                    b.HasOne("API.DAL.Models.Expense", "Expense")
+                    b.HasOne("EST.DAL.Models.Expense", "Expense")
                         .WithMany("ExpenseLocations")
                         .HasForeignKey("ExpenseId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("API.DAL.Models.Location", "Location")
+                    b.HasOne("EST.DAL.Models.Location", "Location")
                         .WithMany("ExpenseLocations")
                         .HasForeignKey("LocationId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -229,15 +233,15 @@ namespace EST.DAL.Migrations
                     b.Navigation("Location");
                 });
 
-            modelBuilder.Entity("API.DAL.Models.ItemExpense", b =>
+            modelBuilder.Entity("EST.DAL.Models.ItemExpense", b =>
                 {
-                    b.HasOne("API.DAL.Models.Expense", "Expense")
+                    b.HasOne("EST.DAL.Models.Expense", "Expense")
                         .WithMany("ItemExpenses")
                         .HasForeignKey("ExpenseId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("API.DAL.Models.Item", "Item")
+                    b.HasOne("EST.DAL.Models.Item", "Item")
                         .WithMany("ItemExpenses")
                         .HasForeignKey("ItemId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -248,9 +252,9 @@ namespace EST.DAL.Migrations
                     b.Navigation("Item");
                 });
 
-            modelBuilder.Entity("API.DAL.Models.Review", b =>
+            modelBuilder.Entity("EST.DAL.Models.Review", b =>
                 {
-                    b.HasOne("API.DAL.Models.Item", "Item")
+                    b.HasOne("EST.DAL.Models.Item", "Item")
                         .WithMany("Reviews")
                         .HasForeignKey("ItemId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -259,31 +263,31 @@ namespace EST.DAL.Migrations
                     b.Navigation("Item");
                 });
 
-            modelBuilder.Entity("API.DAL.Models.Category", b =>
+            modelBuilder.Entity("EST.DAL.Models.Category", b =>
                 {
                     b.Navigation("Expenses");
                 });
 
-            modelBuilder.Entity("API.DAL.Models.Expense", b =>
+            modelBuilder.Entity("EST.DAL.Models.Expense", b =>
                 {
                     b.Navigation("ExpenseLocations");
 
                     b.Navigation("ItemExpenses");
                 });
 
-            modelBuilder.Entity("API.DAL.Models.Item", b =>
+            modelBuilder.Entity("EST.DAL.Models.Item", b =>
                 {
                     b.Navigation("ItemExpenses");
 
                     b.Navigation("Reviews");
                 });
 
-            modelBuilder.Entity("API.DAL.Models.Location", b =>
+            modelBuilder.Entity("EST.DAL.Models.Location", b =>
                 {
                     b.Navigation("ExpenseLocations");
                 });
 
-            modelBuilder.Entity("API.DAL.Models.User", b =>
+            modelBuilder.Entity("EST.DAL.Models.User", b =>
                 {
                     b.Navigation("Expenses");
                 });

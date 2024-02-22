@@ -19,12 +19,4 @@
     </PackageReference>
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Repositories\" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\EST.Security\EST.Security.csproj" />
-  </ItemGroup>
-
 </Project>

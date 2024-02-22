@@ -5,11 +5,11 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using Security.DataAccess;
+using EST.Security.DataAccess.EF;
 
 #nullable disable
 
-namespace Security.Migrations
+namespace EST.Security.Migrations
 {
     [DbContext(typeof(SecurityContext))]
     [Migration("20240217111529_init")]

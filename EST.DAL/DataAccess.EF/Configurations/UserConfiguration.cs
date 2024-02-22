@@ -1,13 +1,8 @@
-﻿using API.DAL.Models;
+﻿using EST.DAL.Models;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace API.DAL.DataAccess.Configurations
+namespace EST.DAL.DataAccess.EF.Configurations
 {
     public class UserConfiguration : IEntityTypeConfiguration<User>
     {

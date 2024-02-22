@@ -4,11 +4,11 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using Security.DataAccess;
+using EST.Security.DataAccess.EF;
 
 #nullable disable
 
-namespace Security.Migrations
+namespace EST.Security.Migrations
 {
     [DbContext(typeof(SecurityContext))]
     partial class SecurityContextModelSnapshot : ModelSnapshot

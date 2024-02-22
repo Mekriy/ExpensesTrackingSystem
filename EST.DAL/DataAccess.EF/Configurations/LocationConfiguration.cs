@@ -1,8 +1,8 @@
-﻿using API.DAL.Models;
+﻿using EST.DAL.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace API.DAL.DataAccess.EF.Configurations
+namespace EST.DAL.DataAccess.EF.Configurations
 {
     public class LocationConfiguration : IEntityTypeConfiguration<Location>
     {

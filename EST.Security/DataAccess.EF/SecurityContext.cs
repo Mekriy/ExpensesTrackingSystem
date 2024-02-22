@@ -1,9 +1,9 @@
 ﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
-using Security.Models;
+using EST.Security.Models;
 
-namespace Security.DataAccess
+namespace EST.Security.DataAccess.EF
 {
     public class SecurityContext : IdentityDbContext<User, IdentityRole<Guid>, Guid>
     {

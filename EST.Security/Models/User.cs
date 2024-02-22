@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity;
 
-namespace Security.Models
+namespace EST.Security.Models
 {
     public class User : IdentityUser<Guid>
     {

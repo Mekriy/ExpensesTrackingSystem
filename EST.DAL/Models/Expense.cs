@@ -1,4 +1,4 @@
-﻿namespace API.DAL.Models
+﻿namespace EST.DAL.Models
 {
     public class Expense : BaseEntity
     {
