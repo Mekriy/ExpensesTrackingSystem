@@ -17,6 +17,7 @@ namespace ETS.WebAPI
             builder.Services.AddScoped<IUserService, UserService>();
             builder.Services.AddScoped<IItemService, ItemService>();
             builder.Services.AddScoped<IExpenseService, ExpenseService>();
+            builder.Services.AddScoped<ICategoryService, CategoryService>();
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
@@ -24,7 +25,6 @@ namespace ETS.WebAPI
             {
                 options.UseSqlServer(builder.Configuration.GetConnectionString("db"));
             });
-
 
             var app = builder.Build();
 

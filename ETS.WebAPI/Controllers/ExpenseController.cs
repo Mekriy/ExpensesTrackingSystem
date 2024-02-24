@@ -40,13 +40,14 @@ namespace ETS.WebAPI.Controllers
             if (expense == null)
                 return BadRequest("No expense!");
 
-            if (await _expenseService.Create(expense))
-                return Ok("Expense is created");
-            else
+            var createdExpense = await _expenseService.Create(expense);
+            if (createdExpense == null)
                 return StatusCode(500, "Error occured while creating expense on server");
+            else
+                return Ok(createdExpense);
         }
         [HttpPut]
-        public async Task<IActionResult> UpdateExpense(ExpenseDTO expense)
+        public async Task<IActionResult> UpdateExpense([FromBody] ExpenseDTO expense)
         {
             if (!ModelState.IsValid)
                 return BadRequest();
@@ -60,7 +61,7 @@ namespace ETS.WebAPI.Controllers
                 return StatusCode(500, "Error occured while updating expense on server");
         }
         [HttpDelete("{expenseId:Guid}")]
-        public async Task<IActionResult> DeleteExpense([FromQuery] Guid expenseId)
+        public async Task<IActionResult> DeleteExpense([FromRoute] Guid expenseId)
         {
             if (expenseId == Guid.Empty)
                 return BadRequest("No guid");
@@ -72,6 +73,32 @@ namespace ETS.WebAPI.Controllers
                 return Ok("Expense is deleted!");
             else
                 return StatusCode(500, "Error occured while deleting expense on server");
+        }
+        [HttpPut("{expenseId:Guid}")]
+        public async Task<IActionResult> AddItemsToExpense([FromRoute] Guid expenseId, [FromBody] List<ItemIdDTO> itemList)
+        {
+            if (expenseId == Guid.Empty)
+                return BadRequest("No expense guid");
+            
+            if(itemList == null || itemList.Count == 0)
+                return BadRequest("No items to add");
+
+            if (await _expenseService.AddItems(expenseId, itemList))
+                return Ok("Items successfully added to expense!");
+            else
+                return StatusCode(500, "Error occured while adding items to expense");
+        }
+        [HttpGet("{expenseId:Guid}/items")]
+        public async Task<IActionResult> GetExpenseItems([FromRoute] Guid expenseId)
+        {
+            if (expenseId == Guid.Empty)
+                return BadRequest("No expense guid");
+
+            var expenseItems = await _expenseService.GetExpenseItems(expenseId);
+            if (expenseItems == null)
+                return NotFound("No items in the expense");
+            else 
+                return Ok(expenseItems);
         }
     }
 }

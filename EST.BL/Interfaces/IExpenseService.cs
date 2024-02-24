@@ -12,9 +12,11 @@ namespace EST.BL.Interfaces
     {
         Task<List<Expense>> GetAll();
         Task<Expense> GetById(Guid id);
-        Task<bool> Create(ExpenseDTO expenseDto);
+        Task<Expense> Create(ExpenseDTO expenseDto);
         Task<bool> Update(ExpenseDTO expenseDto);
         Task<bool> Delete(Guid id);
+        Task<bool> AddItems(Guid id, List<ItemIdDTO> itemList);
+        Task<List<ExpenseItemsDTO>> GetExpenseItems(Guid id);
         Task<bool> Exist(Guid id);
         Task<bool> SaveAsync();
     }

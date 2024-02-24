@@ -27,7 +27,7 @@ namespace EST.BL.Services
         {
             return await _context.Expenses.Where(e => e.Id == id).FirstOrDefaultAsync();
         }
-        public async Task<bool> Create(ExpenseDTO expenseDto)
+        public async Task<Expense> Create(ExpenseDTO expenseDto)
         {
             var expense = new Expense()
             {
@@ -37,7 +37,10 @@ namespace EST.BL.Services
                 UserId = expenseDto.UserId
             };
             await _context.Expenses.AddAsync(expense);
-            return await SaveAsync();
+            if (await SaveAsync())
+                return await _context.Expenses.Where(e => e.Date == expense.Date).FirstOrDefaultAsync();
+            else
+                return null;
         }
         public async Task<bool> Update(ExpenseDTO expenseDto)
         {
@@ -57,6 +60,29 @@ namespace EST.BL.Services
                 return false;
             _context.Expenses.Remove(expense);
             return await SaveAsync();
+        }
+        public async Task<bool> AddItems(Guid id, List<ItemIdDTO> itemList)
+        {
+            List<ItemExpense> list = itemList.Select(i => new ItemExpense()
+            {
+                ExpenseId = id,
+                ItemId = i.Id
+            }).ToList();
+
+            await _context.ItemExpenses.AddRangeAsync(list);
+            return await SaveAsync();
+        }
+        public async Task<List<ExpenseItemsDTO>> GetExpenseItems(Guid id)
+        {
+            return await _context.ItemExpenses
+                .Include(it => it.ItemId)
+                .Where(ie => ie.ExpenseId == id)
+                .Select(i => 
+                new ExpenseItemsDTO()
+                {
+                    Name = i.Item.Name,
+                    IsPublic = i.Item.IsPublic,
+                }).ToListAsync();
         }
         public async Task<bool> Exist(Guid id)
         {
