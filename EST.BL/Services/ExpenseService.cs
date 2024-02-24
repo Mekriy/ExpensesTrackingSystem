@@ -75,7 +75,7 @@ namespace EST.BL.Services
         public async Task<List<ExpenseItemsDTO>> GetExpenseItems(Guid id)
         {
             return await _context.ItemExpenses
-                .Include(it => it.ItemId)
+                .Include(it => it.Item)
                 .Where(ie => ie.ExpenseId == id)
                 .Select(i => 
                 new ExpenseItemsDTO()

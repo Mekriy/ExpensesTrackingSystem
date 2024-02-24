@@ -36,30 +36,30 @@ namespace ETS.WebAPI.Controllers
             if (categoryDto == null)
                 return BadRequest("No category");
 
-            if (await _categoryService.Exist(categoryDto.Name))
-                return BadRequest("Category already exists");
-
             if (await _categoryService.Create(categoryDto))
                 return Ok("Category is created");
             else
-                return StatusCode(500, "Error occured while creating user on server");
+                return StatusCode(500, "Error occured while creating category on server");
         }
         [HttpPut]
-        public async Task<IActionResult> UpdateUser([FromBody] CategoryDTO categoryDto)
+        public async Task<IActionResult> UpdateUser([FromBody] UpdateCategoryDTO categoryDto)
         {
             if (!ModelState.IsValid)
                 return BadRequest();
 
             if (categoryDto == null)
-                return BadRequest("No user");
+                return BadRequest("No category");
 
-            if (!await _categoryService.Exist(categoryDto.Name))
-                return BadRequest("User doesn't exist");
+            if (categoryDto.UserId == Guid.Empty)
+                return BadRequest("No user guid! Cannot update!");
+
+            if (!await _categoryService.Exist(categoryDto.OldName))
+                return BadRequest("Category for update doesn't exist");
 
             if (await _categoryService.Update(categoryDto))
-                return Ok("User is updated!");
+                return Ok("Category is updated!");
             else
-                return StatusCode(500, "Error occured while updating user on server");
+                return StatusCode(500, "Error occured while updating category on server");
         }
         [HttpDelete("{categoryId:Guid}")]
         public async Task<IActionResult> DeleteCategory([FromRoute] Guid categoryId)

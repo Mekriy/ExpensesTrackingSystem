@@ -17,23 +17,24 @@ namespace EST.BL.Services
         {
             return await _context.Categories.Where(i => i.Id == id).FirstOrDefaultAsync();
         }
-        public async Task<bool> Create(CategoryDTO categoryDto)
-        {
-            var category = new Category
-            {
-                Name = categoryDto.Name,
-                IsDeleted = false,
-            };
-            
-            await _context.Categories.AddAsync(category);
-            return await SaveAsync();
-        }
-        public async Task<bool> Update(CategoryDTO categoryDTO)
+        public async Task<bool> Create(CategoryDTO categoryDTO)
         {
             var category = new Category()
             {
                 Name = categoryDTO.Name,
+                IsPublic = false,
+                IsDeleted = false,
+                UserId = categoryDTO.UserId,
             };
+
+            await _context.Categories.AddAsync(category);
+            return await SaveAsync();
+        }
+        public async Task<bool> Update(UpdateCategoryDTO categoryDTO)
+        {
+            var category = await _context.Categories.Include(u => u.User).Where(c => c.Name == categoryDTO.OldName).FirstOrDefaultAsync();
+            category.Name = categoryDTO.NewName;
+            
             _context.Categories.Update(category);
             return await SaveAsync();
         }

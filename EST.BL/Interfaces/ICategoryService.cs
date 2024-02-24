@@ -12,7 +12,7 @@ namespace EST.BL.Interfaces
     {
         Task<Category> GetById(Guid id); 
         Task<bool> Create(CategoryDTO categoryDto);
-        Task<bool> Update(CategoryDTO categoryDto);
+        Task<bool> Update(UpdateCategoryDTO categoryDto);
         Task<bool> Delete(Guid id);
         Task<bool> Exist(string name);
         Task<bool> Exist(Guid id);
