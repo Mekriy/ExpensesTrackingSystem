@@ -26,6 +26,17 @@ namespace ETS.WebAPI
                 options.UseSqlServer(builder.Configuration.GetConnectionString("db"));
             });
 
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy(name: "AllowMyOrigins", policy =>
+                {
+                    policy
+                        .AllowAnyOrigin()
+                        .AllowAnyMethod()
+                        .AllowAnyHeader();
+                });
+            });
+
             var app = builder.Build();
 
             if (args.Length == 1 && args[0].ToLower() == "seeddata")
@@ -49,6 +60,8 @@ namespace ETS.WebAPI
                 app.UseSwaggerUI();
             }
 
+            app.UseRouting();
+            app.UseCors("AllowMyOrigins");
             app.UseHttpsRedirection();
 
             app.UseAuthorization();
