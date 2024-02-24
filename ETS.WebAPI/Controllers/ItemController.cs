@@ -1,6 +1,7 @@
 ﻿using EST.BL.Interfaces;
 using EST.BL.Services;
 using EST.DAL.Models;
+using EST.Domain.DTOs;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ETS.WebAPI.Controllers
@@ -16,7 +17,7 @@ namespace ETS.WebAPI.Controllers
             _itemService = itemService;
         }
 
-        [HttpGet("GetAll")]
+        [HttpGet]
         public async Task<IActionResult> GetAllItems()
         {
             var items = await _itemService.GetAll();
@@ -25,7 +26,7 @@ namespace ETS.WebAPI.Controllers
             else
                 return Ok(items);
         }
-        [HttpGet("GetByGuid")]
+        [HttpGet("{itemId:Guid}")]
         public async Task<IActionResult> GetItemById([FromQuery] Guid itemId)
         {
             var item = await _itemService.GetById(itemId);
@@ -33,8 +34,8 @@ namespace ETS.WebAPI.Controllers
                 return BadRequest("No item");
             return Ok(item);
         }
-        [HttpPost("Create")]
-        public async Task<IActionResult> CreateItem(Item item)
+        [HttpPost]
+        public async Task<IActionResult> CreateItem(ItemDTO item)
         {
             if (!ModelState.IsValid)
                 return BadRequest();
@@ -42,7 +43,7 @@ namespace ETS.WebAPI.Controllers
             if (item == null)
                 return BadRequest("No item");
 
-            if (await _itemService.Exist(item.Id))
+            if (await _itemService.Exist(item.Name))
                 return BadRequest("Item already exists");
 
             if (await _itemService.Create(item))
@@ -50,8 +51,8 @@ namespace ETS.WebAPI.Controllers
             else
                 return StatusCode(500, "Error occured while creating item on server");
         }
-        [HttpPut("Update")]
-        public async Task<IActionResult> UpdateItem(Item item)
+        [HttpPut]
+        public async Task<IActionResult> UpdateItem(ItemDTO item)
         {
             if (!ModelState.IsValid)
                 return BadRequest();
@@ -59,7 +60,7 @@ namespace ETS.WebAPI.Controllers
             if (item == null)
                 return BadRequest("No item");
 
-            if (!await _itemService.Exist(item.Id))
+            if (!await _itemService.Exist(item.Name))
                 return BadRequest("Item doesn't exist");
 
             if (await _itemService.Update(item))
@@ -67,7 +68,7 @@ namespace ETS.WebAPI.Controllers
             else
                 return StatusCode(500, "Error occured while updating item on server");
         }
-        [HttpDelete("Delete")]
+        [HttpDelete("{itemId:Guid}")]
         public async Task<IActionResult> DeleteItem([FromQuery] Guid itemId)
         {
             if (itemId == Guid.Empty)

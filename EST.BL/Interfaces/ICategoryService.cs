@@ -8,15 +8,14 @@ using System.Threading.Tasks;
 
 namespace EST.BL.Interfaces
 {
-    public interface IItemService
+    public interface ICategoryService
     {
-        Task<Item> GetById(Guid id);
-        Task<bool> Create(ItemDTO itemDto);
-        Task<bool> Update(ItemDTO itemDto);
+        Task<Category> GetById(Guid id); 
+        Task<bool> Create(CategoryDTO categoryDto);
+        Task<bool> Update(CategoryDTO categoryDto);
         Task<bool> Delete(Guid id);
-        Task<bool> Exist(Guid id);
         Task<bool> Exist(string name);
+        Task<bool> Exist(Guid id);
         Task<bool> SaveAsync();
-        Task<List<Item>> GetAll();
     }
 }

@@ -7,5 +7,6 @@
         public string Password { get; set; }
         public string RoleName { get; set; }
         public List<Expense> Expenses { get; set; }
+        public List<Category> Categories { get; set; }
     }
 }

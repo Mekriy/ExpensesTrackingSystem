@@ -1,5 +1,6 @@
 ﻿using EST.BL.Interfaces;
 using EST.DAL.Models;
+using EST.Domain.DTOs;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ETS.WebAPI.Controllers
@@ -13,8 +14,8 @@ namespace ETS.WebAPI.Controllers
         {
             _expenseService = expenseService;
         }
-        [HttpGet("GetAll")]
-        public async Task<IActionResult> GetAllExpenses()
+        [HttpGet]
+        public async Task<IActionResult> GetAll()
         {
             var expenses = await _expenseService.GetAll();
             if (expenses == null || expenses.Count == 0)
@@ -22,7 +23,7 @@ namespace ETS.WebAPI.Controllers
             else
                 return Ok(expenses);
         }
-        [HttpGet("GetByGuid")]
+        [HttpGet("{expenseId:Guid}")]
         public async Task<IActionResult> GetExpensesById([FromQuery] Guid expenseId)
         {
             var expense = await _expenseService.GetById(expenseId);
@@ -30,8 +31,8 @@ namespace ETS.WebAPI.Controllers
                 return BadRequest("No expense!");
             return Ok(expense);
         }
-        [HttpPost("Create")]
-        public async Task<IActionResult> CreateExpense(Expense expense)
+        [HttpPost]
+        public async Task<IActionResult> CreateExpense(ExpenseDTO expense)
         {
             if (!ModelState.IsValid)
                 return BadRequest();
@@ -39,16 +40,13 @@ namespace ETS.WebAPI.Controllers
             if (expense == null)
                 return BadRequest("No expense!");
 
-            if (await _expenseService.Exist(expense.Id))
-                return BadRequest("Expense already exists");
-
             if (await _expenseService.Create(expense))
                 return Ok("Expense is created");
             else
                 return StatusCode(500, "Error occured while creating expense on server");
         }
-        [HttpPut("Update")]
-        public async Task<IActionResult> UpdateExpense(Expense expense)
+        [HttpPut]
+        public async Task<IActionResult> UpdateExpense(ExpenseDTO expense)
         {
             if (!ModelState.IsValid)
                 return BadRequest();
@@ -56,24 +54,21 @@ namespace ETS.WebAPI.Controllers
             if (expense == null)
                 return BadRequest("No expense");
 
-            if (!await _expenseService.Exist(expense.Id))
-                return BadRequest("Expense doesn't exist");
-
             if (await _expenseService.Update(expense))
                 return Ok("Expense is updated!");
             else
                 return StatusCode(500, "Error occured while updating expense on server");
         }
-        [HttpDelete("Delete")]
-        public async Task<IActionResult> DeleteExpense([FromQuery] Guid Id)
+        [HttpDelete("{expenseId:Guid}")]
+        public async Task<IActionResult> DeleteExpense([FromQuery] Guid expenseId)
         {
-            if (Id == Guid.Empty)
+            if (expenseId == Guid.Empty)
                 return BadRequest("No guid");
 
-            if (!await _expenseService.Exist(Id))
+            if (!await _expenseService.Exist(expenseId))
                 return BadRequest("Expense doesn't exist");
 
-            if (await _expenseService.Delete(Id))
+            if (await _expenseService.Delete(expenseId))
                 return Ok("Expense is deleted!");
             else
                 return StatusCode(500, "Error occured while deleting expense on server");

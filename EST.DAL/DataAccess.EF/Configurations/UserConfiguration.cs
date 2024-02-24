@@ -13,6 +13,10 @@ namespace EST.DAL.DataAccess.EF.Configurations
             builder
                 .HasMany(e => e.Expenses)
                 .WithOne(u => u.User);
+            builder
+                .HasMany(e => e.Categories)
+                .WithOne(u => u.User)
+                .OnDelete(DeleteBehavior.SetNull);
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using EST.BL.Interfaces;
 using EST.DAL.Models;
+using EST.Domain.DTOs;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ETS.WebAPI.Controllers
@@ -13,7 +14,7 @@ namespace ETS.WebAPI.Controllers
         {
             _userService = userService;
         }
-        [HttpGet("GetAll")]
+        [HttpGet("users")]
         public async Task<IActionResult> GetAllUsers()
         {
             var users = await _userService.GetAll();
@@ -22,16 +23,16 @@ namespace ETS.WebAPI.Controllers
             else
                 return Ok(users);
         }
-        [HttpGet("GetByGuid")]
-        public async Task<IActionResult> GetUserById([FromQuery] Guid userId)
+        [HttpGet("{userId:Guid}")]
+        public async Task<IActionResult> GetUserById([FromRoute] Guid userId)
         {
             var user = await _userService.GetById(userId);
             if (user == null)
                 return BadRequest();
             return Ok(user);
         }
-        [HttpPost("Create")]
-        public async Task<IActionResult> CreateUser(User user)
+        [HttpPost]
+        public async Task<IActionResult> CreateUser([FromBody] UserDTO user)
         {
             if (!ModelState.IsValid)
                 return BadRequest();
@@ -39,7 +40,7 @@ namespace ETS.WebAPI.Controllers
             if (user == null)
                 return BadRequest("No user");
 
-            if (await _userService.Exist(user.Id))
+            if (await _userService.Exist(user.Name))
                 return BadRequest("User already exists");
 
             if (await _userService.Create(user))
@@ -47,8 +48,8 @@ namespace ETS.WebAPI.Controllers
             else
                 return StatusCode(500, "Error occured while creating user on server");
         }
-        [HttpPut("Update")]
-        public async Task<IActionResult> UpdateUser(User user)
+        [HttpPut]
+        public async Task<IActionResult> UpdateUser([FromBody] UserDTO user)
         {
             if (!ModelState.IsValid)
                 return BadRequest();
@@ -56,7 +57,7 @@ namespace ETS.WebAPI.Controllers
             if (user == null)
                 return BadRequest("No user");
 
-            if (!await _userService.Exist(user.Id))
+            if (!await _userService.Exist(user.Name))
                 return BadRequest("User doesn't exist");
 
             if (await _userService.Update(user))
@@ -64,8 +65,8 @@ namespace ETS.WebAPI.Controllers
             else
                 return StatusCode(500, "Error occured while updating user on server");
         }
-        [HttpDelete("Delete")]
-        public async Task<IActionResult> DeleteUser([FromQuery] Guid userId)
+        [HttpDelete("{userId:Guid}")]
+        public async Task<IActionResult> DeleteUser([FromRoute] Guid userId)
         {
             if (userId == Guid.Empty)
                 return BadRequest("No guid");
@@ -78,5 +79,6 @@ namespace ETS.WebAPI.Controllers
             else
                 return StatusCode(500, "Error occured while deleting user on server");
         }
+        
     }
 }
