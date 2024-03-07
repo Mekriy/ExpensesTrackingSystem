@@ -4,6 +4,7 @@ using EST.DAL.DataAccess.EF;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,10 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace EST.DAL.Migrations
 {
     [DbContext(typeof(ExpensesContext))]
-    partial class ExpensesContextModelSnapshot : ModelSnapshot
+    [Migration("20240227121948_deletedColumnsInUser")]
+    partial class deletedColumnsInUser
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -45,7 +47,7 @@ namespace EST.DAL.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Categories", (string)null);
+                    b.ToTable("Categories");
                 });
 
             modelBuilder.Entity("EST.DAL.Models.Expense", b =>
@@ -72,7 +74,7 @@ namespace EST.DAL.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Expenses", (string)null);
+                    b.ToTable("Expenses");
                 });
 
             modelBuilder.Entity("EST.DAL.Models.ExpenseLocation", b =>
@@ -87,7 +89,7 @@ namespace EST.DAL.Migrations
 
                     b.HasIndex("LocationId");
 
-                    b.ToTable("ExpensesLocations", (string)null);
+                    b.ToTable("ExpensesLocations");
                 });
 
             modelBuilder.Entity("EST.DAL.Models.Item", b =>
@@ -105,7 +107,7 @@ namespace EST.DAL.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Items", (string)null);
+                    b.ToTable("Items");
                 });
 
             modelBuilder.Entity("EST.DAL.Models.ItemExpense", b =>
@@ -120,7 +122,7 @@ namespace EST.DAL.Migrations
 
                     b.HasIndex("ExpenseId");
 
-                    b.ToTable("ItemExpenses", (string)null);
+                    b.ToTable("ItemExpenses");
                 });
 
             modelBuilder.Entity("EST.DAL.Models.Location", b =>
@@ -147,7 +149,7 @@ namespace EST.DAL.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Locations", (string)null);
+                    b.ToTable("Locations");
                 });
 
             modelBuilder.Entity("EST.DAL.Models.Review", b =>
@@ -171,7 +173,7 @@ namespace EST.DAL.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Reviews", (string)null);
+                    b.ToTable("Reviews");
                 });
 
             modelBuilder.Entity("EST.DAL.Models.User", b =>
@@ -186,7 +188,7 @@ namespace EST.DAL.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Users", (string)null);
+                    b.ToTable("Users");
                 });
 
             modelBuilder.Entity("EST.DAL.Models.Category", b =>

@@ -16,12 +16,12 @@ namespace ETS.WebAPI.Controllers
             _categoryService = categoryService;
         }
         [HttpGet("{categoryId:Guid}")]
-        public async Task<IActionResult> GetCategoryById([FromRoute] Guid categoryId)
+        public async Task<IActionResult> GetCategoryById([FromRoute] Guid categoryId, CancellationToken token)
         {
             if (categoryId == null)
                 return BadRequest("No guid");
 
-            var category = await _categoryService.GetById(categoryId);
+            var category = await _categoryService.GetById(categoryId, token);
             
             if (category == null)
                 return BadRequest();

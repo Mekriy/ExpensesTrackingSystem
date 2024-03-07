@@ -1,7 +1,10 @@
 using EST.BL.Interfaces;
 using EST.BL.Services;
 using EST.DAL.DataAccess.EF;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 namespace ETS.WebAPI
 {
@@ -11,7 +14,6 @@ namespace ETS.WebAPI
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            //create seeder
             builder.Services.AddTransient<DbSeeder>();
             builder.Services.AddControllers();
             builder.Services.AddScoped<IUserService, UserService>();
@@ -26,6 +28,8 @@ namespace ETS.WebAPI
                 options.UseSqlServer(builder.Configuration.GetConnectionString("db"));
             });
 
+
+
             builder.Services.AddCors(options =>
             {
                 options.AddPolicy(name: "AllowMyOrigins", policy =>
@@ -36,6 +40,36 @@ namespace ETS.WebAPI
                         .AllowAnyHeader();
                 });
             });
+
+            var key = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(builder.Configuration["JWT:SecretKey"]));
+            var tokenValidationParams = new TokenValidationParameters
+            {
+                ValidateIssuer = true,
+                ValidIssuer = builder.Configuration["JWT:Issuer"],
+
+                ValidateAudience = true,
+                ValidAudience = builder.Configuration["JWT:Audience"],
+
+                ValidateLifetime = true,
+
+                ValidateIssuerSigningKey = true,
+                ClockSkew = TimeSpan.Zero,
+                IssuerSigningKey = key
+            };
+
+            builder.Services.AddAuthentication(options =>
+            {
+                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            })
+            .AddJwtBearer(options =>
+            {
+                options.RequireHttpsMetadata = false;
+                options.SaveToken = true;
+                options.TokenValidationParameters = tokenValidationParams;
+            });
+
 
             var app = builder.Build();
 
@@ -49,7 +83,7 @@ namespace ETS.WebAPI
                 using (var scope = scopedFactory.CreateScope())
                 {
                     var service = scope.ServiceProvider.GetService<DbSeeder>();
-                    service.Seed();
+                    service.SeedReviews();
                 }
             }
 
@@ -64,6 +98,7 @@ namespace ETS.WebAPI
             app.UseCors("AllowMyOrigins");
             app.UseHttpsRedirection();
 
+            app.UseAuthentication();
             app.UseAuthorization();
             app.MapControllers();
 

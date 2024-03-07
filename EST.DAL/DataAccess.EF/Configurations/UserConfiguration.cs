@@ -17,6 +17,10 @@ namespace EST.DAL.DataAccess.EF.Configurations
                 .HasMany(e => e.Categories)
                 .WithOne(u => u.User)
                 .OnDelete(DeleteBehavior.SetNull);
+            builder
+                .HasMany(r => r.Reviews)
+                .WithOne(u => u.User)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

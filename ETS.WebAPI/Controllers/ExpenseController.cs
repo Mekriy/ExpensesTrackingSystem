@@ -15,24 +15,24 @@ namespace ETS.WebAPI.Controllers
             _expenseService = expenseService;
         }
         [HttpGet]
-        public async Task<IActionResult> GetAll()
+        public async Task<IActionResult> GetAll(CancellationToken token)
         {
-            var expenses = await _expenseService.GetAll();
+            var expenses = await _expenseService.GetAll(token);
             if (expenses == null || expenses.Count == 0)
                 return BadRequest("There are no expenses!");
             else
                 return Ok(expenses);
         }
         [HttpGet("{expenseId:Guid}")]
-        public async Task<IActionResult> GetExpensesById([FromQuery] Guid expenseId)
+        public async Task<IActionResult> GetExpensesById([FromQuery] Guid expenseId, CancellationToken token)
         {
-            var expense = await _expenseService.GetById(expenseId);
+            var expense = await _expenseService.GetById(expenseId, token);
             if (expense == null)
                 return BadRequest("No expense!");
             return Ok(expense);
         }
         [HttpPost]
-        public async Task<IActionResult> CreateExpense(ExpenseDTO expense)
+        public async Task<IActionResult> CreateExpense(ExpenseDTO expense, CancellationToken token)
         {
             if (!ModelState.IsValid)
                 return BadRequest();
@@ -40,7 +40,7 @@ namespace ETS.WebAPI.Controllers
             if (expense == null)
                 return BadRequest("No expense!");
 
-            var createdExpense = await _expenseService.Create(expense);
+            var createdExpense = await _expenseService.Create(expense, token);
             if (createdExpense == null)
                 return StatusCode(500, "Error occured while creating expense on server");
             else
@@ -89,12 +89,12 @@ namespace ETS.WebAPI.Controllers
                 return StatusCode(500, "Error occured while adding items to expense");
         }
         [HttpGet("{expenseId:Guid}/items")]
-        public async Task<IActionResult> GetExpenseItems([FromRoute] Guid expenseId)
+        public async Task<IActionResult> GetExpenseItems([FromRoute] Guid expenseId, CancellationToken token)
         {
             if (expenseId == Guid.Empty)
                 return BadRequest("No expense guid");
 
-            var expenseItems = await _expenseService.GetExpenseItems(expenseId);
+            var expenseItems = await _expenseService.GetExpenseItems(expenseId, token);
             if (expenseItems == null)
                 return NotFound("No items in the expense");
             else 

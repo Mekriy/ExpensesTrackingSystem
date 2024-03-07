@@ -11,76 +11,120 @@ namespace ETS.WebAPI
             _context = context;
         }
 
+        public void SeedReviews()
+        {
+            var itemsList = _context.Items.ToList();
+            var usersList = _context.Users.ToList();
+
+            var reviews = new List<Review>
+            {
+                new Review { Value = 5, ItemId = itemsList[0].Id, UserId = usersList[0].Id},
+                new Review { Value = 2, ItemId = itemsList[1].Id, UserId = usersList[1].Id},
+                new Review { Value = 10, ItemId = itemsList[2].Id, UserId = usersList[2].Id},
+                new Review { Value = 3, ItemId = itemsList[3].Id, UserId = usersList[3].Id},
+                new Review { Value = 8, ItemId = itemsList[4].Id, UserId = usersList[4].Id}
+            };
+            _context.Reviews.AddRange(reviews);
+            _context.SaveChanges();
+        }
         public void Seed()
         {
-            var admin = new User { Name = "Admin", Email = "admin@example.com", Password = "admin123", RoleName = "admin" };
+            var admin = new User { RoleName = "admin" };
             _context.Users.Add(admin);
 
             for (int i = 1; i <= 4; i++)
             {
-                var user = new User { Name = $"User {i}", Email = $"user{i}@example.com", Password = $"user{i}pass", RoleName = "user" };
+                var user = new User { RoleName = "user" };
                 _context.Users.Add(user);
             }
 
             _context.SaveChanges();
 
+            var adminUser = _context.Users.FirstOrDefault(r => r.RoleName == "admin");
+
             // Seed Categories
             var categories = new List<Category>
-        {
-            new Category { Name = "Food" },
-            new Category { Name = "Entertainment" },
-            new Category { Name = "Transportation" },
-            new Category { Name = "Shopping" },
-            new Category { Name = "Utilities" }
-        };
+            {
+                new Category { Name = "Food", IsPublic = true, IsDeleted = false, UserId =  adminUser.Id},
+                new Category { Name = "Entertainment", IsPublic = true, IsDeleted = false, UserId =  adminUser.Id},
+                new Category { Name = "Transportation", IsPublic = true, IsDeleted = false, UserId =  adminUser.Id},
+                new Category { Name = "Shopping", IsPublic = true, IsDeleted = false, UserId =  adminUser.Id},
+                new Category { Name = "Utilities", IsPublic = true, IsDeleted = false, UserId =  adminUser.Id }
+            };
 
             _context.Categories.AddRange(categories);
             _context.SaveChanges();
 
-            // Seed Expenses
-            var random = new Random();
-            foreach (var user in _context.Users)
+            var items = new List<Item>
             {
-                foreach (var category in _context.Categories)
-                {
-                    var expense = new Expense
-                    {
-                        Price = random.Next(10, 100),
-                        Date = DateTime.Now.AddDays(-random.Next(1, 30)),
-                        UserId = user.Id,
-                        CategoryId = category.Id
-                    };
-
-                    // Seed ItemExpenses (2-3 items per expense)
-                    var items = _context.Items.OrderBy(x => Guid.NewGuid()).Take(random.Next(2, 4)).ToList();
-                    foreach (var item in items)
-                    {
-                        expense.ItemExpenses.Add(new ItemExpense { ItemId = item.Id });
-                    }
-
-                    // Seed ExpenseLocations (1-2 locations per expense)
-                    var locations = _context.Locations.OrderBy(x => Guid.NewGuid()).Take(random.Next(1, 3)).ToList();
-                    foreach (var location in locations)
-                    {
-                        expense.ExpenseLocations.Add(new ExpenseLocation { LocationId = location.Id });
-                    }
-
-                    _context.Expenses.Add(expense);
-                }
-            }
-
+                new Item { Name = "Milk", IsPublic = false},
+                new Item { Name = "Travel to Work", IsPublic = false},
+                new Item { Name = "Pay Electricity Bill", IsPublic = false},
+                new Item { Name = "Dine at Restaurant", IsPublic = false},
+                new Item { Name = "Games", IsPublic = false}
+            };
+            _context.Items.AddRange(items);
             _context.SaveChanges();
 
-            // Seed Reviews
-            foreach (var item in _context.Items)
-            {
-                for (int i = 0; i < 5; i++)
-                {
-                    var review = new Review { Value = random.Next(1, 6), ItemId = item.Id };
-                    _context.Reviews.Add(review);
-                }
-            }
+            var itemsList = _context.Items.ToList();
+            var usersList = _context.Users.ToList();
 
+            var locations = new List<Location>
+            {
+                new Location { Name = "ATB", Latitude = "49.930665522850425", Longitude = "23.570525944141867", Address = "12 Stepana Bandery Street, Novoiavorivsk, Lviv Oblast, 81054"},
+                new Location { Name = "Privat Bank", Latitude = "49.932198697820404", Longitude = "23.56916338206351", Address = "1 Stepana Bandery Street, Novoiavorivsk, Lviv Oblast, 81053"},
+                new Location { Name = "WOG gas station", Latitude = "49.92592065881233", Longitude = "23.5735749452971", Address = "2 Lvivska Street, Novoiavorivsk, Lviv Oblast, 81053"},
+                new Location { Name = "Lavanda restaurant", Latitude = "49.92766118720214", Longitude = "23.570721074895378", Address = "Sichovikh Striltsiv Street, Novoiavorivsk, Lviv Oblast, 81054"},
+                new Location { Name = "Rukavychka", Latitude = "49.927896015577616", Longitude = "23.573135062999558", Address = "20 Sichovikh Striltsiv Street, Novoyavorivsk, Lviv Oblast, 81054"}
+            };
+
+            _context.Locations.AddRange(locations);
+            _context.SaveChanges();
+
+            var categoryLists = _context.Categories.ToList();
+
+            var expenses = new List<Expense>
+            {
+                new Expense { Price = 300, Date = DateTime.Now.AddDays(3), CategoryId = categoryLists[0].Id, UserId = usersList[0].Id },
+                new Expense { Price = 333, Date = DateTime.Now.AddDays(2), CategoryId = categoryLists[1].Id, UserId = usersList[1].Id },
+                new Expense { Price = 555, Date = DateTime.Now.AddDays(1), CategoryId = categoryLists[2].Id, UserId = usersList[2].Id },
+                new Expense { Price = 222, Date = DateTime.Now.AddDays(4), CategoryId = categoryLists[3].Id, UserId = usersList[3].Id },
+                new Expense { Price = 10000, Date = DateTime.Now.AddDays(5), CategoryId = categoryLists[4].Id, UserId = usersList[4].Id }
+            };
+
+            _context.Expenses.AddRange(expenses);
+            _context.SaveChanges();
+
+            var expenseList = _context.Expenses.ToList();
+
+            var itemexpenses = new List<ItemExpense>
+            {
+                new ItemExpense { ExpenseId = expenseList[0].Id, ItemId = itemsList[0].Id},
+                new ItemExpense { ExpenseId = expenseList[1].Id, ItemId = itemsList[1].Id},
+                new ItemExpense { ExpenseId = expenseList[1].Id, ItemId = itemsList[2].Id},
+                new ItemExpense { ExpenseId = expenseList[1].Id, ItemId = itemsList[3].Id},
+                new ItemExpense { ExpenseId = expenseList[2].Id, ItemId = itemsList[2].Id},
+                new ItemExpense { ExpenseId = expenseList[3].Id, ItemId = itemsList[3].Id},
+                new ItemExpense { ExpenseId = expenseList[3].Id, ItemId = itemsList[1].Id},
+                new ItemExpense { ExpenseId = expenseList[3].Id, ItemId = itemsList[2].Id},
+                new ItemExpense { ExpenseId = expenseList[4].Id, ItemId = itemsList[4].Id}
+            };
+
+            _context.ItemExpenses.AddRange(itemexpenses);
+            _context.SaveChanges();
+
+            var locationList = _context.Locations.ToList();
+
+            var expenseLocation = new List<ExpenseLocation>
+            {
+                new ExpenseLocation { ExpenseId = expenseList[0].Id, LocationId = locationList[0].Id},
+                new ExpenseLocation { ExpenseId = expenseList[1].Id, LocationId = locationList[1].Id},
+                new ExpenseLocation { ExpenseId = expenseList[2].Id, LocationId = locationList[2].Id},
+                new ExpenseLocation { ExpenseId = expenseList[3].Id, LocationId = locationList[3].Id},
+                new ExpenseLocation { ExpenseId = expenseList[4].Id, LocationId = locationList[4].Id}
+            };
+
+            _context.ExpensesLocations.AddRange(expenseLocation);
             _context.SaveChanges();
         }
     }
