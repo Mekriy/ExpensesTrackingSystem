@@ -18,16 +18,16 @@ namespace EST.BL.Services
         {
             _context = context;
         }
-        public async Task<List<Expense>> GetAll()
+        public async Task<List<Expense>> GetAll(CancellationToken token)
         {
-            return await _context.Expenses.ToListAsync();
+            return await _context.Expenses.ToListAsync(token);
         }
 
-        public async Task<Expense> GetById(Guid id)
+        public async Task<Expense> GetById(Guid id, CancellationToken token)
         {
-            return await _context.Expenses.Where(e => e.Id == id).FirstOrDefaultAsync();
+            return await _context.Expenses.Where(e => e.Id == id).FirstOrDefaultAsync(token);
         }
-        public async Task<Expense> Create(ExpenseDTO expenseDto)
+        public async Task<Expense> Create(ExpenseDTO expenseDto, CancellationToken token)
         {
             var expense = new Expense()
             {
@@ -38,7 +38,7 @@ namespace EST.BL.Services
             };
             await _context.Expenses.AddAsync(expense);
             if (await SaveAsync())
-                return await _context.Expenses.Where(e => e.Date == expense.Date).FirstOrDefaultAsync();
+                return await _context.Expenses.Where(e => e.Date == expense.Date).FirstOrDefaultAsync(token);
             else
                 return null;
         }
@@ -55,7 +55,7 @@ namespace EST.BL.Services
         }
         public async Task<bool> Delete(Guid id)
         {
-            var expense = await GetById(id);
+            var expense = await _context.Expenses.Where(u => u.Id == id).FirstOrDefaultAsync();
             if (expense == null)
                 return false;
             _context.Expenses.Remove(expense);
@@ -72,7 +72,7 @@ namespace EST.BL.Services
             await _context.ItemExpenses.AddRangeAsync(list);
             return await SaveAsync();
         }
-        public async Task<List<ExpenseItemsDTO>> GetExpenseItems(Guid id)
+        public async Task<List<ExpenseItemsDTO>> GetExpenseItems(Guid id, CancellationToken token)
         {
             return await _context.ItemExpenses
                 .Include(it => it.Item)
@@ -82,7 +82,7 @@ namespace EST.BL.Services
                 {
                     Name = i.Item.Name,
                     IsPublic = i.Item.IsPublic,
-                }).ToListAsync();
+                }).ToListAsync(token);
         }
         public async Task<bool> Exist(Guid id)
         {

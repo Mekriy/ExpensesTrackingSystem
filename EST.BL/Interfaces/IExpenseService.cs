@@ -10,13 +10,13 @@ namespace EST.BL.Interfaces
 {
     public interface IExpenseService
     {
-        Task<List<Expense>> GetAll();
-        Task<Expense> GetById(Guid id);
-        Task<Expense> Create(ExpenseDTO expenseDto);
+        Task<List<Expense>> GetAll(CancellationToken token);
+        Task<Expense> GetById(Guid id, CancellationToken token);
+        Task<Expense> Create(ExpenseDTO expenseDto, CancellationToken token);
         Task<bool> Update(ExpenseDTO expenseDto);
         Task<bool> Delete(Guid id);
         Task<bool> AddItems(Guid id, List<ItemIdDTO> itemList);
-        Task<List<ExpenseItemsDTO>> GetExpenseItems(Guid id);
+        Task<List<ExpenseItemsDTO>> GetExpenseItems(Guid id, CancellationToken token);
         Task<bool> Exist(Guid id);
         Task<bool> SaveAsync();
     }

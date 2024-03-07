@@ -10,7 +10,7 @@ namespace EST.BL.Interfaces
 {
     public interface ICategoryService
     {
-        Task<Category> GetById(Guid id); 
+        Task<Category> GetById(Guid id, CancellationToken token); 
         Task<bool> Create(CategoryDTO categoryDto);
         Task<bool> Update(UpdateCategoryDTO categoryDto);
         Task<bool> Delete(Guid id);

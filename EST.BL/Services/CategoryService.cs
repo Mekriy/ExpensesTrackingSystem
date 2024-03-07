@@ -13,19 +13,37 @@ namespace EST.BL.Services
         {
             _context = context;
         }
-        public async Task<Category> GetById(Guid id)
+        public async Task<Category> GetById(Guid id, CancellationToken token)
         {
-            return await _context.Categories.Where(i => i.Id == id).FirstOrDefaultAsync();
+            return await _context.Categories.Where(i => i.Id == id).FirstOrDefaultAsync(token);
         }
         public async Task<bool> Create(CategoryDTO categoryDTO)
         {
-            var category = new Category()
+            var user = await _context.Users.Where(i => i.Id == categoryDTO.UserId).FirstOrDefaultAsync();
+            if (user == null)
+                return false;
+
+            Category category;
+            if (user.RoleName == "Admin")
             {
-                Name = categoryDTO.Name,
-                IsPublic = false,
-                IsDeleted = false,
-                UserId = categoryDTO.UserId,
-            };
+                category = new Category()
+                {
+                    Name = categoryDTO.Name,
+                    IsPublic = true,
+                    IsDeleted = false,
+                    UserId = categoryDTO.UserId,
+                };
+            }
+            else
+            {
+                category = new Category()
+                {
+                    Name = categoryDTO.Name,
+                    IsPublic = false,
+                    IsDeleted = false,
+                    UserId = categoryDTO.UserId,
+                };
+            }
 
             await _context.Categories.AddAsync(category);
             return await SaveAsync();
@@ -40,7 +58,7 @@ namespace EST.BL.Services
         }
         public async Task<bool> Delete(Guid id)
         {
-            var category = await GetById(id);
+            var category = await _context.Categories.Where(u => u.Id == id).FirstOrDefaultAsync();
             var deletedCategory = new Category()
             {
                 Name = category.Name,
