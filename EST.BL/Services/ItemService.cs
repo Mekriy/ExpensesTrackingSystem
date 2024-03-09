@@ -18,10 +18,6 @@ namespace EST.BL.Services
         {
             _context = context;
         }
-        public async Task<List<Item>> GetAll(CancellationToken token)
-        {
-            return await _context.Items.ToListAsync(token);
-        }
         public async Task<Item> GetById(Guid id, CancellationToken token)
         {
             return await _context.Items.Where(i => i.Id == id).FirstOrDefaultAsync(token);
@@ -40,22 +36,46 @@ namespace EST.BL.Services
 
             return itemDTO;
         }
-        public async Task<List<ItemDTO>> GetItemsToReview(CancellationToken token)
+        public async Task<List<ItemDTO>> GetPublicItems(CancellationToken token)
         {
-            var itemDTOs = await _context.Items.Where(i => i.IsPublic == false).Select(i => new ItemDTO()
+            return await _context.Items.Where(i => i.IsPublic == true && i.IsDeleted == false).Select(i => new ItemDTO()
             {
                 Name = i.Name,
                 IsPublic = i.IsPublic,
             }).ToListAsync(token);
+        }
 
-            return itemDTOs;
+        public async Task<List<ItemDTO>> GetPrivateUserItems(Guid userId, CancellationToken token)
+        {
+            return await _context.Items.Where(i => i.UserId == userId && i.IsPublic == false && i.IsDeleted == false).Select(i => new ItemDTO()
+            {
+                Name = i.Name,
+                IsPublic = i.IsPublic,
+            }).ToListAsync(token);
+        }
+        public async Task<List<ItemDTO>> GetAllUserItems(Guid userId, CancellationToken token)
+        {
+            return await _context.Items.Where(i => i.UserId == userId && i.IsDeleted == false).Select(i => new ItemDTO()
+            {
+                Name = i.Name,
+                IsPublic = i.IsPublic,
+            }).ToListAsync(token);
+        }
+        public async Task<List<ItemDTO>> GetItemsForAdminToReview(CancellationToken token)
+        {
+            return await _context.Items.Where(i => i.IsPublic == false && i.IsDeleted == false).Select(i => new ItemDTO()
+            {
+                Name = i.Name,
+                IsPublic = i.IsPublic,
+            }).ToListAsync(token);
         }
         public async Task<bool> Create(ItemDTO itemDto)
         {
             var item = new Item()
             {
                 Name = itemDto.Name,
-                IsPublic = false
+                IsPublic = false,
+                IsDeleted = false
             };
             await _context.Items.AddAsync(item);
             return await SaveAsync();
@@ -65,7 +85,8 @@ namespace EST.BL.Services
             var item = new Item()
             {
                 Name = itemDto.Name,
-                IsPublic = itemDto.IsPublic
+                IsPublic = itemDto.IsPublic,
+                IsDeleted = false
             };
             _context.Items.Update(item);
             return await SaveAsync();
@@ -83,12 +104,13 @@ namespace EST.BL.Services
             _context.Items.Update(item);
             return await SaveAsync();
         }
-        public async Task<bool> Delete(Guid id)
+        public async Task<bool> SoftDelete(Guid id)
         {
             var item = await _context.Items.Where(i => i.Id == id).FirstOrDefaultAsync();
             if (item == null)
                 return false;
-            _context.Items.Remove(item);
+            item.IsDeleted = true;
+            _context.Items.Update(item);
             return await SaveAsync();
         }
         public async Task<bool> Exist(Guid id)

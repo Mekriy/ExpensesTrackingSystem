@@ -1,7 +1,10 @@
-﻿using EST.BL.Interfaces;
+﻿using System.Security.Claims;
+using EST.BL.Interfaces;
 using EST.BL.Services;
 using EST.DAL.Models;
 using EST.Domain.DTOs;
+using EST.Domain.Helpers.ErrorFilter;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ETS.WebAPI.Controllers
@@ -20,16 +23,41 @@ namespace ETS.WebAPI.Controllers
         [HttpGet]
         public async Task<IActionResult> GetAllItems(CancellationToken token)
         {
-            var items = await _itemService.GetAll(token);
+            var items = await _itemService.GetPublicItems(token);
+            if (items == null || items.Count == 0)
+                return BadRequest("There are no items!");
+            else
+                return Ok(items);
+        }
+        [Authorize]
+        [HttpGet]
+        public async Task<IActionResult> GetUserItems(CancellationToken token)
+        {
+            Guid userId;
+            try
+            {
+                userId = Guid.Parse(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier));
+            }
+            catch (Exception e)
+            {
+                throw new ApiException()
+                {
+                    StatusCode = StatusCodes.Status422UnprocessableEntity,
+                    Title = "Invalid guid",
+                    Detail = "Can't parse user guid"
+                };
+            }
+            
+            var items = await _itemService.GetAllUserItems(userId, token);
             if (items == null || items.Count == 0)
                 return BadRequest("There are no items!");
             else
                 return Ok(items);
         }
         [HttpGet("review")]
-        public async Task<IActionResult> GetItemsToReview(CancellationToken token)
+        public async Task<IActionResult> GetItemsForAdminToReview(CancellationToken token)
         {
-            var items = await _itemService.GetItemsToReview(token);
+            var items = await _itemService.GetItemsForAdminToReview(token);
             if (items == null || items.Count == 0)
                 return NotFound("No items to review");
             else
@@ -40,7 +68,12 @@ namespace ETS.WebAPI.Controllers
         {
             var item = await _itemService.GetById(itemId, token);
             if (item == null)
-                return NotFound("No item");
+                throw new ApiException()
+                {
+                    StatusCode = StatusCodes.Status404NotFound,
+                    Title = "Item not found",
+                    Detail = "Server didn't find item on database"
+                };
             return Ok(item);
         }
         [HttpGet("{itemName}")]
@@ -111,7 +144,7 @@ namespace ETS.WebAPI.Controllers
             if (!await _itemService.Exist(itemId))
                 return BadRequest("Item doesn't exist");
 
-            if (await _itemService.Delete(itemId))
+            if (await _itemService.SoftDelete(itemId))
                 return Ok("Item is deleted!");
             else
                 return StatusCode(500, "Error occured while deleting item on server");

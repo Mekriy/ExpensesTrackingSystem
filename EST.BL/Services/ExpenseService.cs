@@ -27,7 +27,7 @@ namespace EST.BL.Services
         {
             return await _context.Expenses.Where(e => e.Id == id).FirstOrDefaultAsync(token);
         }
-        public async Task<Expense> Create(ExpenseDTO expenseDto, CancellationToken token)
+        public async Task<ExpenseDTO> Create(ExpenseCreateDTO expenseDto, CancellationToken token)
         {
             var expense = new Expense()
             {
@@ -38,11 +38,18 @@ namespace EST.BL.Services
             };
             await _context.Expenses.AddAsync(expense);
             if (await SaveAsync())
-                return await _context.Expenses.Where(e => e.Date == expense.Date).FirstOrDefaultAsync(token);
+            {
+                var expenseGet = await _context.Expenses.Where(e => e.Date == expense.Date).FirstOrDefaultAsync(token);
+                return new ExpenseDTO()
+                {
+                    Price = expenseGet.Price,
+                    Date = expenseDto.Date
+                };
+            }
             else
                 return null;
         }
-        public async Task<bool> Update(ExpenseDTO expenseDto)
+        public async Task<bool> Update(ExpenseUpdateDTO expenseDto)
         {
             var expense = new Expense()
             {

@@ -32,7 +32,7 @@ namespace ETS.WebAPI.Controllers
             return Ok(expense);
         }
         [HttpPost]
-        public async Task<IActionResult> CreateExpense(ExpenseDTO expense, CancellationToken token)
+        public async Task<IActionResult> CreateExpense(ExpenseCreateDTO expense, CancellationToken token)
         {
             if (!ModelState.IsValid)
                 return BadRequest();
@@ -47,7 +47,7 @@ namespace ETS.WebAPI.Controllers
                 return Ok(createdExpense);
         }
         [HttpPut]
-        public async Task<IActionResult> UpdateExpense([FromBody] ExpenseDTO expense)
+        public async Task<IActionResult> UpdateExpense([FromBody] ExpenseUpdateDTO expense)
         {
             if (!ModelState.IsValid)
                 return BadRequest();

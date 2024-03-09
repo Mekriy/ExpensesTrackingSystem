@@ -6,5 +6,6 @@
         public List<Expense> Expenses { get; set; }
         public List<Category> Categories { get; set; }
         public List<Review> Reviews { get; set; }
+        public List<Item> Items { get; set; }
     }
 }

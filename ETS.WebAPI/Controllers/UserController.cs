@@ -4,10 +4,11 @@ using EST.Domain.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using EST.Domain.Helpers.ErrorFilter;
 
 namespace ETS.WebAPI.Controllers
 {
-    [Route("api/[controller]/[action]")]
+    [Route("api/[controller]")]
     [ApiController]
     public class UserController : ControllerBase
     {
@@ -20,63 +21,90 @@ namespace ETS.WebAPI.Controllers
         [HttpGet]
         public async Task<IActionResult> GetById(CancellationToken token)
         {
-            //TODO: try parse
-            var userParseId = Guid.Parse(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier));
-            var user = _userService.GetById(userParseId, token);
+            Guid userParseId;
+            try
+            {
+                userParseId = Guid.Parse(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier));
+            }
+            catch (Exception e)
+            {
+                throw new ApiException()
+                {
+                    StatusCode = StatusCodes.Status422UnprocessableEntity,
+                    Title = "Something wrong with user Guid",
+                    Detail = "Error occured while parsing guid from user claims"
+                };
+            }
+            var user = await _userService.GetById(userParseId, token);
 
             if (user == null)
-                return NotFound("User doesn't exist");
+                throw new ApiException()
+                {
+                    StatusCode = StatusCodes.Status404NotFound,
+                    Title = "User doesn't exist",
+                    Detail = "Server didn't find user on database"
+                };
             return Ok(user);
         }
         [Authorize]
         [HttpPost]
         public async Task<IActionResult> CreateUser()
         {
-            var user = new UserDTO()
+            var user = new UserDTO();
+            try
             {
-                //TODO: try parse
-                Id = Guid.Parse(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier)),
-                RoleName = HttpContext.User.FindFirstValue(ClaimTypes.Role),
-            };
-            if (user == null)
-                return BadRequest("No user to create");
+                user.Id = Guid.Parse(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier));
+                user.RoleName = HttpContext.User.FindFirstValue(ClaimTypes.Role);
+            }
+            catch (Exception e)
+            {
+                throw new ApiException()
+                {
+                    StatusCode = StatusCodes.Status422UnprocessableEntity,
+                    Title = "Something wrong with user Guid",
+                    Detail = "Error occured while parsing guid from user claims"
+                };
+            }
 
             if (await _userService.Create(user))
                 return Ok("User is created");
             else
-                return StatusCode(500, "Error occured while creating user on server");
+                throw new ApiException()
+                {
+                    StatusCode = StatusCodes.Status500InternalServerError,
+                    Title = "Can't create user",
+                    Detail = "Error occured while creating user on server"
+                };
         }
-        //[HttpPut]
-        //public async Task<IActionResult> UpdateUser([FromBody] UserDTO user)
-        //{
-        //    if (!ModelState.IsValid)
-        //        return BadRequest();
+        [HttpDelete("{userId:Guid}")]
+        public async Task<IActionResult> DeleteUser([FromRoute] Guid userId, CancellationToken token)
+        {
+            if (userId == Guid.Empty)
+                throw new ApiException()
+                {
+                    StatusCode = StatusCodes.Status400BadRequest,
+                    Title = "Invalid guid",
+                    Detail = "Guid is empty"
+                };
 
-        //    if (user == null)
-        //        return BadRequest("No user");
+            if (!await _userService.Exist(userId))
+                throw new ApiException()
+                {
+                    StatusCode = StatusCodes.Status404NotFound,
+                    Title = "No user exists",
+                    Detail = "Server didn't find user on the database"
+                };
 
-        //    if (!await _userService.Exist(user.Name))
-        //        return BadRequest("User doesn't exist");
-
-        //    if (await _userService.Update(user))
-        //        return Ok("User is updated!");
-        //    else
-        //        return StatusCode(500, "Error occured while updating user on server");
-        //}
-        //[HttpDelete("{userId:Guid}")]
-        //public async Task<IActionResult> DeleteUser([FromRoute] Guid userId)
-        //{
-        //    if (userId == Guid.Empty)
-        //        return BadRequest("No guid");
-
-        //    if (!await _userService.Exist(userId))
-        //        return BadRequest("User doesn't exist");
-
-        //    if (await _userService.Delete(userId))
-        //        return Ok("User is deleted!");
-        //    else
-        //        return StatusCode(500, "Error occured while deleting user on server");
-        //}
+            if (await _userService.Delete(userId, token))
+                return Ok("User is deleted!");
+            else
+                throw new ApiException()
+                {
+                    StatusCode = StatusCodes.Status500InternalServerError,
+                    Title = "Can't delete user",
+                    Detail = "Error occured while deleting user on server"
+                };
+        }
 
     }
 }

@@ -7,11 +7,8 @@ namespace EST.BL.Interfaces
     {
         Task<UserDTO> GetById(Guid id, CancellationToken token);
         Task<bool> Create(UserDTO user);
-        //Task<bool> Update(UserDTO user);
-        //Task<bool> Delete(Guid id);
-        //Task<bool> Exist(Guid id);
-        //Task<bool> Exist(string name);
+        Task<bool> Delete(Guid id, CancellationToken token);
+        Task<bool> Exist(Guid id);
         Task<bool> SaveAsync();
-        //Task<List<User>> GetAll();
     }
 }

@@ -10,16 +10,20 @@ namespace EST.BL.Interfaces
 {
     public interface IItemService
     {
+        //TODO: delete test get methods
         Task<Item> GetById(Guid id, CancellationToken token);
         Task<ItemDTO> GetByName(string name, CancellationToken token);
-        Task<List<ItemDTO>> GetItemsToReview(CancellationToken token);
+        Task<List<ItemDTO>> GetPublicItems(CancellationToken token);
+        //TODO: Check if i need private user items. Visually no diff for user on frontend
+        Task<List<ItemDTO>> GetPrivateUserItems(Guid userId, CancellationToken token);
+        Task<List<ItemDTO>> GetAllUserItems(Guid userId, CancellationToken token);
+        Task<List<ItemDTO>> GetItemsForAdminToReview(CancellationToken token);
         Task<bool> Create(ItemDTO itemDto);
         Task<bool> Update(ItemDTO itemDto);
         Task<bool> UpdateToPublic(Guid adminId, ItemDTO itemDto);
-        Task<bool> Delete(Guid id);
+        Task<bool> SoftDelete(Guid id);
         Task<bool> Exist(Guid id);
         Task<bool> Exist(string name);
         Task<bool> SaveAsync();
-        Task<List<Item>> GetAll(CancellationToken token);
     }
 }

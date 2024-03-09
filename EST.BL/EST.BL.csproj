@@ -10,4 +10,8 @@
     <ProjectReference Include="..\EST.DAL\EST.DAL.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Serilog.AspNetCore" Version="6.1.0" />
+  </ItemGroup>
+
 </Project>
