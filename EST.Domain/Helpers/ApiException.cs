@@ -1,4 +1,4 @@
-namespace EST.Domain.Helpers.ErrorFilter;
+namespace EST.Domain.Helpers;
 
 public class ApiException : Exception
 {

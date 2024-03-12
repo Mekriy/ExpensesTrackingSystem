@@ -4,6 +4,7 @@ using EST.Domain.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using EST.Domain.Helpers;
 using EST.Domain.Helpers.ErrorFilter;
 
 namespace ETS.WebAPI.Controllers
@@ -13,9 +14,11 @@ namespace ETS.WebAPI.Controllers
     public class UserController : ControllerBase
     {
         private readonly IUserService _userService;
-        public UserController(IUserService userService)
+        private readonly IManageImage _manageImage;
+        public UserController(IUserService userService, IManageImage manageImage)
         {
             _userService = userService;
+            _manageImage = manageImage;
         }
         [Authorize]
         [HttpGet]
@@ -105,6 +108,33 @@ namespace ETS.WebAPI.Controllers
                     Detail = "Error occured while deleting user on server"
                 };
         }
-
+        [HttpPost("upload")]
+        public async Task<IActionResult> UploadPhoto(
+            IFormFile file)
+        {
+            Guid userParseId;
+            try
+            {
+                userParseId = Guid.Parse(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier));
+            }
+            catch (Exception e)
+            {
+                throw new ApiException()
+                {
+                    StatusCode = StatusCodes.Status422UnprocessableEntity,
+                    Title = "Something wrong with user Guid",
+                    Detail = "Error occured while parsing guid from user claims"
+                };
+            }
+            
+            var result = await _manageImage.UploadFile(file, userParseId);
+            return Ok(result);
+        }
+        [HttpGet("fileName")]
+        public async Task<IActionResult> DownloadPhoto([FromQuery] string fileName)
+        {
+            var result = await _manageImage.DownloadFile(fileName);
+            return File(result.Item1, result.Item2, result.Item3);
+        }
     }
 }

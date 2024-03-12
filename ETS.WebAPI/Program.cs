@@ -17,6 +17,7 @@ builder.Services.AddControllers(options =>
     options.Filters.Add(typeof(CustomGlobalExceptionFilter));
 });
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddTransient<IManageImage, ManageImage>();
 builder.Services.AddScoped<IItemService, ItemService>();
 builder.Services.AddScoped<IExpenseService, ExpenseService>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();

@@ -13,7 +13,7 @@ namespace EST.BL.Interfaces
         Task<List<Expense>> GetAll(CancellationToken token);
         Task<Expense> GetById(Guid id, CancellationToken token);
         Task<ExpenseDTO> Create(ExpenseCreateDTO expenseDto, CancellationToken token);
-        Task<bool> Update(ExpenseUpdateDTO expenseDto);
+        Task<ExpenseDTO> Update(ExpenseUpdateDTO expenseDto, Guid userId);
         Task<bool> Delete(Guid id);
         Task<bool> AddItems(Guid id, List<ItemIdDTO> itemList);
         Task<List<ExpenseItemsDTO>> GetExpenseItems(Guid id, CancellationToken token);

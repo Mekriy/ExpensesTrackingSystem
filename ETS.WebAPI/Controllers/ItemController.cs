@@ -3,6 +3,7 @@ using EST.BL.Interfaces;
 using EST.BL.Services;
 using EST.DAL.Models;
 using EST.Domain.DTOs;
+using EST.Domain.Helpers;
 using EST.Domain.Helpers.ErrorFilter;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -20,7 +21,7 @@ namespace ETS.WebAPI.Controllers
             _itemService = itemService;
         }
 
-        [HttpGet]
+        [HttpGet("items")]
         public async Task<IActionResult> GetAllItems(CancellationToken token)
         {
             var items = await _itemService.GetPublicItems(token);
@@ -30,7 +31,7 @@ namespace ETS.WebAPI.Controllers
                 return Ok(items);
         }
         [Authorize]
-        [HttpGet]
+        [HttpGet("user/items")]
         public async Task<IActionResult> GetUserItems(CancellationToken token)
         {
             Guid userId;
@@ -50,16 +51,40 @@ namespace ETS.WebAPI.Controllers
             
             var items = await _itemService.GetAllUserItems(userId, token);
             if (items == null || items.Count == 0)
-                return BadRequest("There are no items!");
+                throw new ApiException()
+                {
+                    StatusCode = StatusCodes.Status404NotFound,
+                    Title = "No items",
+                    Detail = "There is no items on server"
+                };
             else
                 return Ok(items);
         }
         [HttpGet("review")]
         public async Task<IActionResult> GetItemsForAdminToReview(CancellationToken token)
         {
-            var items = await _itemService.GetItemsForAdminToReview(token);
+            Guid userId;
+            try
+            {
+                userId = Guid.Parse(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier));
+            }
+            catch (Exception e)
+            {
+                throw new ApiException()
+                {
+                    StatusCode = StatusCodes.Status422UnprocessableEntity,
+                    Title = "Invalid guid",
+                    Detail = "Can't parse user guid"
+                };
+            }
+            var items = await _itemService.GetItemsForAdminToReview(userId, token);
             if (items == null || items.Count == 0)
-                return NotFound("No items to review");
+                throw new ApiException()
+                {
+                    StatusCode = StatusCodes.Status404NotFound,
+                    Title = "No items",
+                    Detail = "No items for admin to review on server"
+                };
             else
                 return Ok(items);
         }

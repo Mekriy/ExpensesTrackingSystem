@@ -17,7 +17,7 @@ namespace EST.BL.Interfaces
         //TODO: Check if i need private user items. Visually no diff for user on frontend
         Task<List<ItemDTO>> GetPrivateUserItems(Guid userId, CancellationToken token);
         Task<List<ItemDTO>> GetAllUserItems(Guid userId, CancellationToken token);
-        Task<List<ItemDTO>> GetItemsForAdminToReview(CancellationToken token);
+        Task<List<ItemDTO>> GetItemsForAdminToReview(Guid userId, CancellationToken token);
         Task<bool> Create(ItemDTO itemDto);
         Task<bool> Update(ItemDTO itemDto);
         Task<bool> UpdateToPublic(Guid adminId, ItemDTO itemDto);

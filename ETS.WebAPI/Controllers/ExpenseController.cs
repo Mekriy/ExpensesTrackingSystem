@@ -1,6 +1,9 @@
-﻿using EST.BL.Interfaces;
+﻿using System.Security.Claims;
+using EST.BL.Interfaces;
 using EST.DAL.Models;
 using EST.Domain.DTOs;
+using EST.Domain.Helpers;
+using EST.Domain.Helpers.ErrorFilter;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ETS.WebAPI.Controllers
@@ -39,7 +42,22 @@ namespace ETS.WebAPI.Controllers
 
             if (expense == null)
                 return BadRequest("No expense!");
-
+            
+            Guid userParseId;
+            try
+            {
+                userParseId = Guid.Parse(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier));
+            }
+            catch (Exception e)
+            {
+                throw new ApiException()
+                {
+                    StatusCode = StatusCodes.Status422UnprocessableEntity,
+                    Title = "Something wrong with user Guid",
+                    Detail = "Error occured while parsing guid from user claims"
+                };
+            }
+            
             var createdExpense = await _expenseService.Create(expense, token);
             if (createdExpense == null)
                 return StatusCode(500, "Error occured while creating expense on server");
@@ -51,53 +69,82 @@ namespace ETS.WebAPI.Controllers
         {
             if (!ModelState.IsValid)
                 return BadRequest();
-
+            
+            Guid userParseId;
+            try
+            {
+                userParseId = Guid.Parse(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier));
+            }
+            catch (Exception e)
+            {
+                throw new ApiException()
+                {
+                    StatusCode = StatusCodes.Status422UnprocessableEntity,
+                    Title = "Something wrong with user Guid",
+                    Detail = "Error occured while parsing guid from user claims"
+                };
+            }
+            
             if (expense == null)
                 return BadRequest("No expense");
 
-            if (await _expenseService.Update(expense))
-                return Ok("Expense is updated!");
+            var result = await _expenseService.Update(expense, userParseId);
+            if (result != null)
+                return Ok(result);
             else
-                return StatusCode(500, "Error occured while updating expense on server");
+                throw new ApiException()
+                {
+                    StatusCode = StatusCodes.Status500InternalServerError,
+                    Title = "Can't update expense",
+                    Detail = "Error occured while updating expense on server"
+                };
         }
         [HttpDelete("{expenseId:Guid}")]
         public async Task<IActionResult> DeleteExpense([FromRoute] Guid expenseId)
         {
-            if (expenseId == Guid.Empty)
-                return BadRequest("No guid");
-
-            if (!await _expenseService.Exist(expenseId))
-                return BadRequest("Expense doesn't exist");
-
             if (await _expenseService.Delete(expenseId))
                 return Ok("Expense is deleted!");
             else
-                return StatusCode(500, "Error occured while deleting expense on server");
+                throw new ApiException()
+                {
+                    StatusCode = StatusCodes.Status500InternalServerError,
+                    Title = "Can't delete expense",
+                    Detail = "Error occured while deleting expense on server"
+                };
         }
         [HttpPut("{expenseId:Guid}")]
         public async Task<IActionResult> AddItemsToExpense([FromRoute] Guid expenseId, [FromBody] List<ItemIdDTO> itemList)
         {
-            if (expenseId == Guid.Empty)
-                return BadRequest("No expense guid");
-            
-            if(itemList == null || itemList.Count == 0)
-                return BadRequest("No items to add");
-
             if (await _expenseService.AddItems(expenseId, itemList))
                 return Ok("Items successfully added to expense!");
             else
-                return StatusCode(500, "Error occured while adding items to expense");
+                throw new ApiException()
+                {
+                    StatusCode = StatusCodes.Status500InternalServerError,
+                    Title = "Can't add items",
+                    Detail = "Error occured while adding items to expense"
+                };
         }
         [HttpGet("{expenseId:Guid}/items")]
         public async Task<IActionResult> GetExpenseItems([FromRoute] Guid expenseId, CancellationToken token)
         {
             if (expenseId == Guid.Empty)
-                return BadRequest("No expense guid");
+                throw new ApiException()
+                {
+                    StatusCode = StatusCodes.Status400BadRequest,
+                    Title = "Guid empty",
+                    Detail = "No expense guid"
+                };
 
             var expenseItems = await _expenseService.GetExpenseItems(expenseId, token);
             if (expenseItems == null)
-                return NotFound("No items in the expense");
-            else 
+                throw new ApiException()
+                {
+                    StatusCode = StatusCodes.Status404NotFound,
+                    Title = "Can't find items",
+                    Detail = "There is no items for this expense"
+                };
+            else
                 return Ok(expenseItems);
         }
     }

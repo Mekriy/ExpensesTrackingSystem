@@ -8,6 +8,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using EST.Domain.Helpers;
+using Microsoft.AspNetCore.Http;
 
 namespace EST.BL.Services
 {
@@ -61,8 +63,17 @@ namespace EST.BL.Services
                 IsPublic = i.IsPublic,
             }).ToListAsync(token);
         }
-        public async Task<List<ItemDTO>> GetItemsForAdminToReview(CancellationToken token)
+        public async Task<List<ItemDTO>> GetItemsForAdminToReview(Guid userId, CancellationToken token)
         {
+            var user = await _context.Users.Where(u => u.Id == userId).FirstOrDefaultAsync(token);
+            if (user.RoleName != "Admin")
+                throw new ApiException()
+                {
+                    StatusCode = StatusCodes.Status403Forbidden,
+                    Title = "Not admin role",
+                    Detail = "Forbidden. User's role is not admin"
+                };
+            
             return await _context.Items.Where(i => i.IsPublic == false && i.IsDeleted == false).Select(i => new ItemDTO()
             {
                 Name = i.Name,

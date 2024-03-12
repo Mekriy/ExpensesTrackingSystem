@@ -14,6 +14,7 @@ namespace EST.DAL.DataAccess.EF
         public DbSet<Review> Reviews { get; set; }
         public DbSet<ExpenseLocation> ExpensesLocations { get; set; }
         public DbSet<ItemExpense> ItemExpenses { get; set; }
+        public DbSet<PhotoFile> PhotoFiles { get; set; }
 
         public ExpensesContext()
         {
