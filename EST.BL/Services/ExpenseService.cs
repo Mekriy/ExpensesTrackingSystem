@@ -9,6 +9,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using EST.Domain.Helpers;
+using EST.Domain.Pagination;
 using Microsoft.AspNetCore.Http;
 
 namespace EST.BL.Services
@@ -20,21 +21,93 @@ namespace EST.BL.Services
         {
             _context = context;
         }
-        public async Task<List<Expense>> GetAll(CancellationToken token)
+        public async Task<PagedResponse<List<ExpenseDTO>>> GetAll(PaginationFilter filter, CancellationToken token)
         {
-            return await _context.Expenses.ToListAsync(token);
-        }
+            IQueryable<Expense> query = _context.Expenses;
 
-        public async Task<Expense> GetById(Guid id, CancellationToken token)
+            query = filter.SortColumn switch
+            {
+                "Price" when filter.SortDirection == "asc" =>
+                    query.OrderBy(t => t.Price),
+                "Price" => query.OrderByDescending(t => t.Price),
+                "Date" when filter.SortDirection == "asc" =>
+                    query.OrderBy(t => t.Date),
+                "Date" => query.OrderByDescending(t => t.Price),
+                _ => query
+            };
+
+            query = query
+                .Skip((filter.PageNumber - 1) * filter.PageSize)
+                .Take(filter.PageSize);
+
+            var result = await query
+                .Select(u => new ExpenseDTO()
+                {
+                    Price = u.Price,
+                    Date = u.Date
+                })
+                .ToListAsync(token);
+            return new PagedResponse<List<ExpenseDTO>>(result, filter.PageNumber, filter.PageSize);
+        }
+        public async Task<PagedResponse<List<ExpenseDTO>>> GetAllUserExpenses(PaginationFilter filter, string user, CancellationToken token)
         {
-            return await _context.Expenses.Where(e => e.Id == id).FirstOrDefaultAsync(token);
+            Guid userId;
+            try
+            {
+                 userId = Guid.Parse(user);
+            }
+            catch (Exception e)
+            {
+                throw new ApiException()
+                {
+                    StatusCode = StatusCodes.Status422UnprocessableEntity,
+                    Title = "Can't parse guid",
+                    Detail = "Can't parse guid. Something went wrong"
+                };
+            }
+            
+            IQueryable<Expense> query = _context.Expenses;
+
+            query = filter.SortColumn switch
+            {
+                "Price" when filter.SortDirection == "asc" =>
+                    query.OrderBy(t => t.Price),
+                "Price" => query.OrderByDescending(t => t.Price),
+                "Date" when filter.SortDirection == "asc" =>
+                    query.OrderBy(t => t.Date),
+                "Date" => query.OrderByDescending(t => t.Price),
+                _ => query
+            };
+
+            query = query
+                .Skip((filter.PageNumber - 1) * filter.PageSize)
+                .Take(filter.PageSize);
+            
+            var result = await query
+                .Where(u => u.UserId == userId)
+                .Select(u => new ExpenseDTO()
+                {
+                    Price = u.Price,
+                    Date = u.Date
+                })
+                .ToListAsync(token);
+            return new PagedResponse<List<ExpenseDTO>>(result, filter.PageNumber, filter.PageSize);
+        }
+        public async Task<ExpenseDTO> GetById(Guid id, CancellationToken token)
+        {
+            var expense = await _context.Expenses.Where(e => e.Id == id).FirstOrDefaultAsync(token);
+            return new ExpenseDTO()
+            {
+                Date = expense.Date,
+                Price = expense.Price
+            };
         }
         public async Task<ExpenseDTO> Create(ExpenseCreateDTO expenseDto, CancellationToken token)
         {
             var expense = new Expense()
             {
                 Price = expenseDto.Price,
-                Date = expenseDto.Date,
+                Date = DateTime.UtcNow,
                 CategoryId = expenseDto.CategoryId,
                 UserId = expenseDto.UserId
             };
@@ -45,7 +118,7 @@ namespace EST.BL.Services
                 return new ExpenseDTO()
                 {
                     Price = expenseGet.Price,
-                    Date = expenseDto.Date
+                    Date = expenseGet.Date
                 };
             }
             else
@@ -61,6 +134,7 @@ namespace EST.BL.Services
             expense.Date = expenseDto.Date;
             expense.CategoryId = expenseDto.CategoryId;
             expense.UserId = userId;
+            
             _context.Expenses.Update(expense);
             var isUpdated = await SaveAsync();
             if (isUpdated)
@@ -114,15 +188,25 @@ namespace EST.BL.Services
                     Title = "No items",
                     Detail = "No items to add on server"
                 };
-            
-            var list = itemList.Select(i => new ItemExpense()
+
+            List<ItemExpense> list = itemList.Select(i => new ItemExpense()
             {
                 ExpenseId = id,
                 ItemId = i.Id
             }).ToList();
+          
+            _context.ItemExpenses.AddRange(list);
 
-            await _context.ItemExpenses.AddRangeAsync(list);
-            return await SaveAsync();
+            var result = await SaveAsync();
+            if (result)
+                return true;
+            else
+                throw new ApiException()
+                {
+                    StatusCode = StatusCodes.Status500InternalServerError,
+                    Title = "Error while saving",
+                    Detail = "Error occured while saving item expense on server"
+                };
         }
         public async Task<List<ExpenseItemsDTO>> GetExpenseItems(Guid id, CancellationToken token)
         {

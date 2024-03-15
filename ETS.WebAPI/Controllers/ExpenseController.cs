@@ -4,6 +4,7 @@ using EST.DAL.Models;
 using EST.Domain.DTOs;
 using EST.Domain.Helpers;
 using EST.Domain.Helpers.ErrorFilter;
+using EST.Domain.Pagination;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ETS.WebAPI.Controllers
@@ -18,13 +19,30 @@ namespace ETS.WebAPI.Controllers
             _expenseService = expenseService;
         }
         [HttpGet]
-        public async Task<IActionResult> GetAll(CancellationToken token)
+        public async Task<IActionResult> GetAll(
+            [FromQuery] int pageNumber,
+            [FromQuery] int pageSize,
+            [FromQuery] string sortColumn,
+            [FromQuery] string sortDirection,
+            CancellationToken token)
         {
-            var expenses = await _expenseService.GetAll(token);
-            if (expenses == null || expenses.Count == 0)
-                return BadRequest("There are no expenses!");
-            else
-                return Ok(expenses);
+            var filter = new PaginationFilter(pageNumber, pageSize, sortColumn, sortDirection);
+            var expenses = await _expenseService.GetAll(filter, token);
+            return Ok(expenses);
+        }
+
+        [HttpGet("users")]
+        public async Task<IActionResult> GetUserExpensesPagination(
+            [FromQuery] int pageNumber,
+            [FromQuery] int pageSize,
+            [FromQuery] string sortColumn,
+            [FromQuery] string sortDirection,
+            CancellationToken token)
+        {
+            var user = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var filter = new PaginationFilter(pageNumber, pageSize, sortColumn, sortDirection);
+            var expenses = await _expenseService.GetAllUserExpenses(filter,user, token);
+            return Ok(expenses);
         }
         [HttpGet("{expenseId:Guid}")]
         public async Task<IActionResult> GetExpensesById([FromQuery] Guid expenseId, CancellationToken token)
@@ -57,12 +75,18 @@ namespace ETS.WebAPI.Controllers
                     Detail = "Error occured while parsing guid from user claims"
                 };
             }
-            
+
+            expense.UserId = userParseId;
             var createdExpense = await _expenseService.Create(expense, token);
-            if (createdExpense == null)
-                return StatusCode(500, "Error occured while creating expense on server");
-            else
+            if (createdExpense != null)
                 return Ok(createdExpense);
+            else
+                throw new ApiException()
+                {
+                    StatusCode = StatusCodes.Status500InternalServerError,
+                    Title = "Can't create expense",
+                    Detail = "Error occured while creating expense on server"
+                };
         }
         [HttpPut]
         public async Task<IActionResult> UpdateExpense([FromBody] ExpenseUpdateDTO expense)

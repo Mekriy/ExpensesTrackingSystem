@@ -5,13 +5,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using EST.Domain.Pagination;
 
 namespace EST.BL.Interfaces
 {
     public interface IExpenseService
     {
-        Task<List<Expense>> GetAll(CancellationToken token);
-        Task<Expense> GetById(Guid id, CancellationToken token);
+        Task<PagedResponse<List<ExpenseDTO>>> GetAll(PaginationFilter filter, CancellationToken token);
+        Task<PagedResponse<List<ExpenseDTO>>> GetAllUserExpenses(PaginationFilter filter, string user, CancellationToken token);
+        Task<ExpenseDTO> GetById(Guid id, CancellationToken token);
         Task<ExpenseDTO> Create(ExpenseCreateDTO expenseDto, CancellationToken token);
         Task<ExpenseDTO> Update(ExpenseUpdateDTO expenseDto, Guid userId);
         Task<bool> Delete(Guid id);
