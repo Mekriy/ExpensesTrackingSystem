@@ -192,7 +192,8 @@ namespace EST.BL.Services
             List<ItemExpense> list = itemList.Select(i => new ItemExpense()
             {
                 ExpenseId = id,
-                ItemId = i.Id
+                ItemId = i.Id,
+                Quantity = i.Quantity
             }).ToList();
           
             _context.ItemExpenses.AddRange(list);
@@ -218,6 +219,7 @@ namespace EST.BL.Services
                 {
                     Name = i.Item.Name,
                     IsPublic = i.Item.IsPublic,
+                    Quantity = i.Quantity
                 }).ToListAsync(token);
         }
         public async Task<bool> Exist(Guid id)

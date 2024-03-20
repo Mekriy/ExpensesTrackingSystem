@@ -10,5 +10,6 @@ namespace EST.Domain.DTOs
     {
         public string Name { get; set; }
         public bool IsPublic { get; set; }
+        public int Quantity { get; set; }
     }
 }
