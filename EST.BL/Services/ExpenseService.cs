@@ -102,14 +102,14 @@ namespace EST.BL.Services
                 Price = expense.Price
             };
         }
-        public async Task<ExpenseDTO> Create(ExpenseCreateDTO expenseDto, CancellationToken token)
+        public async Task<ExpenseDTO> Create(ExpenseCreateDTO expenseDto,Guid userId, CancellationToken token)
         {
             var expense = new Expense()
             {
                 Price = expenseDto.Price,
                 Date = DateTime.UtcNow,
                 CategoryId = expenseDto.CategoryId,
-                UserId = expenseDto.UserId
+                UserId = userId
             };
             await _context.Expenses.AddAsync(expense);
             if (await SaveAsync())
@@ -171,9 +171,9 @@ namespace EST.BL.Services
             _context.Expenses.Remove(expense);
             return await SaveAsync();
         }
-        public async Task<bool> AddItems(Guid id, List<ItemIdDTO> itemList)
+        public async Task<bool> AddItems(Guid userId, Guid expenseId, List<ItemIdDTO> itemList)
         {
-            if (id == Guid.Empty)
+            if (expenseId == Guid.Empty)
                 throw new ApiException()
                 {
                     StatusCode = StatusCodes.Status400BadRequest,
@@ -189,9 +189,18 @@ namespace EST.BL.Services
                     Detail = "No items to add on server"
                 };
 
+            var checkForPrivateItems = await CheckForPrivateItems(userId, itemList);
+            if(!checkForPrivateItems)
+                throw new ApiException()
+                {
+                    StatusCode = StatusCodes.Status400BadRequest,
+                    Title = "private item",
+                    Detail = "not user's private item"
+                };
+            
             List<ItemExpense> list = itemList.Select(i => new ItemExpense()
             {
-                ExpenseId = id,
+                ExpenseId = expenseId,
                 ItemId = i.Id,
                 Quantity = i.Quantity
             }).ToList();
@@ -208,6 +217,18 @@ namespace EST.BL.Services
                     Title = "Error while saving",
                     Detail = "Error occured while saving item expense on server"
                 };
+        }
+
+        private async Task<bool> CheckForPrivateItems(Guid userId, List<ItemIdDTO> itemList)
+        {
+            var items = itemList
+                .Select(x => _context.Items.FirstOrDefault(i => i.Id == x.Id))
+                .Where(i=> !i.IsPublic)
+                .ToList();
+            var result = true;
+            result = items.All(i => i.UserId == userId);
+            
+            return result;
         }
         public async Task<List<ExpenseItemsDTO>> GetExpenseItems(Guid id, CancellationToken token)
         {

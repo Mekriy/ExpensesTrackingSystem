@@ -14,10 +14,10 @@ namespace EST.BL.Interfaces
         Task<PagedResponse<List<ExpenseDTO>>> GetAll(PaginationFilter filter, CancellationToken token);
         Task<PagedResponse<List<ExpenseDTO>>> GetAllUserExpenses(PaginationFilter filter, string user, CancellationToken token);
         Task<ExpenseDTO> GetById(Guid id, CancellationToken token);
-        Task<ExpenseDTO> Create(ExpenseCreateDTO expenseDto, CancellationToken token);
+        Task<ExpenseDTO> Create(ExpenseCreateDTO expenseDto,Guid userId, CancellationToken token);
         Task<ExpenseDTO> Update(ExpenseUpdateDTO expenseDto, Guid userId);
         Task<bool> Delete(Guid id);
-        Task<bool> AddItems(Guid id, List<ItemIdDTO> itemList);
+        Task<bool> AddItems(Guid userId, Guid expenseId, List<ItemIdDTO> itemList);
         Task<List<ExpenseItemsDTO>> GetExpenseItems(Guid id, CancellationToken token);
         Task<bool> Exist(Guid id);
         Task<bool> SaveAsync();

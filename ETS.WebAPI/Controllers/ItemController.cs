@@ -110,35 +110,67 @@ namespace ETS.WebAPI.Controllers
             return Ok(item);
         }
         [HttpPost]
-        public async Task<IActionResult> CreateItem([FromBody] ItemDTO item)
+        [Authorize]
+        public async Task<IActionResult> CreateItem([FromQuery] string itemName)
         {
             if (!ModelState.IsValid)
                 return BadRequest();
 
-            if (item == null)
+            Guid userId;
+            try
+            {
+                userId = Guid.Parse(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier));
+            }
+            catch (Exception e)
+            {
+                throw new ApiException()
+                {
+                    StatusCode = StatusCodes.Status422UnprocessableEntity,
+                    Title = "Invalid guid",
+                    Detail = "Can't parse user guid"
+                };
+            }
+            
+            if (itemName == String.Empty)
                 return BadRequest("No item");
 
-            if (await _itemService.Exist(item.Name))
+            if (await _itemService.Exist(itemName))
                 return BadRequest("Item already exists");
 
-            if (await _itemService.Create(item))
+            if (await _itemService.Create(userId, itemName))
                 return Ok("Item is created");
             else
                 return StatusCode(500, "Error occured while creating item on server");
         }
         [HttpPut]
-        public async Task<IActionResult> UpdateItem([FromBody] ItemDTO item)
+        [Authorize]
+        public async Task<IActionResult> UpdateItem([FromQuery] string itemName)
         {
             if (!ModelState.IsValid)
                 return BadRequest();
-
-            if (item == null)
+            
+            Guid userId;
+            try
+            {
+                userId = Guid.Parse(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier));
+            }
+            catch (Exception e)
+            {
+                throw new ApiException()
+                {
+                    StatusCode = StatusCodes.Status422UnprocessableEntity,
+                    Title = "Invalid guid",
+                    Detail = "Can't parse user guid"
+                };
+            }
+            
+            if (itemName == String.Empty)
                 return BadRequest("No item");
 
-            if (!await _itemService.Exist(item.Name))
+            if (!await _itemService.Exist(itemName))
                 return BadRequest("Item doesn't exist");
 
-            if (await _itemService.Update(item))
+            if (await _itemService.Update(userId, itemName))
                 return Ok("Item is updated!");
             else
                 return StatusCode(500, "Error occured while updating item on server");
