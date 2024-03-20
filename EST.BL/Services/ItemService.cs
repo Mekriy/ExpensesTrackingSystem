@@ -75,20 +75,21 @@ namespace EST.BL.Services
                 IsPublic = i.IsPublic,
             }).ToListAsync(token);
         }
-        public async Task<bool> Create(ItemDTO itemDto)
+        public async Task<bool> Create(Guid userId, string itemName)
         {
             var item = new Item()
             {
-                Name = itemDto.Name,
+                Name = itemName,
                 IsPublic = false,
-                IsDeleted = false
+                IsDeleted = false,
+                UserId = userId
             };
             await _context.Items.AddAsync(item);
             return await SaveAsync();
         }
-        public async Task<bool> Update(ItemDTO itemDto)
+        public async Task<bool> Update(Guid userId, string itemName)
         {
-            var item = await _context.Items.Where(i => i.Name == itemDto.Name).FirstOrDefaultAsync();
+            var item = await _context.Items.Where(i => i.Name == itemName && i.UserId == userId).FirstOrDefaultAsync();
             if (item == null)
                 throw new ApiException()
                 {
@@ -96,9 +97,7 @@ namespace EST.BL.Services
                     Title = "Not found",
                     Detail = "Can't find item on server"
                 };
-            item.Name = itemDto.Name;
-            item.IsPublic = itemDto.IsPublic;
-            item.IsDeleted = false;
+            item.Name = itemName;
             
             _context.Items.Update(item);
             return await SaveAsync();
