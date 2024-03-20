@@ -32,6 +32,7 @@ namespace EST.DAL.DataAccess.EF
             modelBuilder.ApplyConfiguration(new ReviewConfiguration());
             modelBuilder.ApplyConfiguration(new ExpenseConfiguration());
             modelBuilder.ApplyConfiguration(new LocationConfiguration());
+            modelBuilder.ApplyConfiguration(new PhotoFileConfiguration());
             
             base.OnModelCreating(modelBuilder);
         }

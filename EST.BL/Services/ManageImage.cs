@@ -107,7 +107,6 @@ public class ManageImage : IManageImage
     }
     private async Task<string> GetFilePath(string fileName)
     {
-        var filePath = await _context.PhotoFiles.Where(f => f.FileName == fileName).FirstOrDefaultAsync();
         var getStaticContentDirectory = GetStaticContentDirectory();
         return Path.Combine(getStaticContentDirectory, fileName);
     }

@@ -6,5 +6,6 @@
         public Item Item { get; set; }
         public Guid ExpenseId { get; set; }
         public Expense Expense { get; set; }
+        public int Quantity { get; set; } 
     }
 }

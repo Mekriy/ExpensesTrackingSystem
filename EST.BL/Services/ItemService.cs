@@ -3,11 +3,6 @@ using EST.DAL.DataAccess.EF;
 using EST.DAL.Models;
 using EST.Domain.DTOs;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using EST.Domain.Helpers;
 using Microsoft.AspNetCore.Http;
 
@@ -93,12 +88,18 @@ namespace EST.BL.Services
         }
         public async Task<bool> Update(ItemDTO itemDto)
         {
-            var item = new Item()
-            {
-                Name = itemDto.Name,
-                IsPublic = itemDto.IsPublic,
-                IsDeleted = false
-            };
+            var item = await _context.Items.Where(i => i.Name == itemDto.Name).FirstOrDefaultAsync();
+            if (item == null)
+                throw new ApiException()
+                {
+                    StatusCode = StatusCodes.Status404NotFound,
+                    Title = "Not found",
+                    Detail = "Can't find item on server"
+                };
+            item.Name = itemDto.Name;
+            item.IsPublic = itemDto.IsPublic;
+            item.IsDeleted = false;
+            
             _context.Items.Update(item);
             return await SaveAsync();
         }
@@ -107,11 +108,17 @@ namespace EST.BL.Services
             if (!await _context.Users.Where(i => i.Id == adminId).AnyAsync())
                 return false;
 
-            var item = new Item()
-            {
-                Name = itemDto.Name,
-                IsPublic = true
-            };
+            var item = await _context.Items.Where(i => i.Name == itemDto.Name).FirstOrDefaultAsync();
+            if (item == null)
+                throw new ApiException()
+                {
+                    StatusCode = StatusCodes.Status404NotFound,
+                    Title = "Not found",
+                    Detail = "Can't find item on server"
+                };
+            item.Name = itemDto.Name;
+            item.IsPublic = itemDto.IsPublic;
+
             _context.Items.Update(item);
             return await SaveAsync();
         }
