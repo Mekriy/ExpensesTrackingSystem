@@ -51,7 +51,16 @@ namespace EST.BL.Services
             }
 
             var user = await _expensesContext.Users.Where(u => u.Id == Id).FirstOrDefaultAsync(token);
+            var result = await PrivateItemDeleteWithUser(user.Id);
             _expensesContext.Users.Remove(user);
+            return await SaveAsync();
+        }
+        private async Task<bool> PrivateItemDeleteWithUser(Guid userId)
+        {
+            var items = await _expensesContext.Items
+                .Where(i => !i.IsPublic && i.UserId == userId)
+                .ToListAsync();
+            _expensesContext.Items.RemoveRange(items);
             return await SaveAsync();
         }
         public async Task<bool> Exist(Guid id)
