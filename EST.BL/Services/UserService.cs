@@ -24,15 +24,24 @@ namespace EST.BL.Services
             };
             return userDTO;
         }
-        public async Task<bool> Create(UserDTO userDTO)
+        public async Task<UserDTO> Create(UserDTO userDTO)
         {
             var user = new User
             {
                 Id = userDTO.Id,
+                Email = userDTO.Email,
                 RoleName = userDTO.RoleName,
             };
             await _expensesContext.Users.AddAsync(user);
-            return await SaveAsync();
+            var result = await SaveAsync();
+            if (result)
+                return new UserDTO()
+                {
+                    Id = user.Id,
+                    Email = user.Email,
+                    RoleName = user.RoleName
+                };
+            return null;
         }
         public async Task<bool> Delete(Guid Id, CancellationToken token)
         {

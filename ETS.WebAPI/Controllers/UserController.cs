@@ -57,6 +57,7 @@ namespace ETS.WebAPI.Controllers
             try
             {
                 user.Id = Guid.Parse(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier));
+                user.Email = HttpContext.User.FindFirstValue(ClaimTypes.Email);
                 user.RoleName = HttpContext.User.FindFirstValue(ClaimTypes.Role);
             }
             catch (Exception e)
@@ -69,8 +70,9 @@ namespace ETS.WebAPI.Controllers
                 };
             }
 
-            if (await _userService.Create(user))
-                return Ok("User is created");
+            var createdUser = await _userService.Create(user);
+            if (createdUser != null)
+                return Created("/api/User", createdUser);
             else
                 throw new ApiException()
                 {
