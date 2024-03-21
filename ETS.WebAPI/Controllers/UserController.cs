@@ -81,18 +81,26 @@ namespace ETS.WebAPI.Controllers
                     Detail = "Error occured while creating user on server"
                 };
         }
-        [HttpDelete("{userId:Guid}")]
-        public async Task<IActionResult> DeleteUser([FromRoute] Guid userId, CancellationToken token)
+        [HttpDelete]
+        [Authorize]
+        public async Task<IActionResult> DeleteUser(CancellationToken token)
         {
-            if (userId == Guid.Empty)
+            Guid userParseId;
+            try
+            {
+                userParseId = Guid.Parse(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier));
+            }
+            catch (Exception e)
+            {
                 throw new ApiException()
                 {
-                    StatusCode = StatusCodes.Status400BadRequest,
-                    Title = "Invalid guid",
-                    Detail = "Guid is empty"
+                    StatusCode = StatusCodes.Status422UnprocessableEntity,
+                    Title = "Something wrong with user Guid",
+                    Detail = "Error occured while parsing guid from user claims"
                 };
+            }
 
-            if (!await _userService.Exist(userId))
+            if (!await _userService.Exist(userParseId))
                 throw new ApiException()
                 {
                     StatusCode = StatusCodes.Status404NotFound,
@@ -100,15 +108,29 @@ namespace ETS.WebAPI.Controllers
                     Detail = "Server didn't find user on the database"
                 };
 
-            if (await _userService.Delete(userId, token))
-                return Ok("User is deleted!");
-            else
-                throw new ApiException()
-                {
-                    StatusCode = StatusCodes.Status500InternalServerError,
-                    Title = "Can't delete user",
-                    Detail = "Error occured while deleting user on server"
-                };
+            var auth = Request.Headers.Authorization;
+            using var client = new HttpClient();
+            client.DefaultRequestHeaders.Add("Authorization", auth.ToString());
+            
+            var response = await client.DeleteAsync($"{ConstantVariables.ngrok}/api/User");
+            if (response.IsSuccessStatusCode)
+            {
+                if (await _userService.Delete(userParseId, token))
+                    return Ok("User is deleted!");
+                else
+                    throw new ApiException()
+                    {
+                        StatusCode = StatusCodes.Status500InternalServerError,
+                        Title = "Can't delete user",
+                        Detail = "Error occured while deleting user on main server"
+                    };
+            }
+            throw new ApiException()
+            {
+                StatusCode = StatusCodes.Status500InternalServerError,
+                Title = "Can't delete user",
+                Detail = "Error occured while deleting user on security server"
+            };
         }
         [HttpPost("upload")]
         public async Task<IActionResult> UploadPhoto(
