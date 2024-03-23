@@ -2,7 +2,7 @@ using System.Security.AccessControl;
 
 namespace EST.Domain.Pagination;
 
-public class PagedResponse<T> : Response<T>
+public class PagedResponse<T>
 {
     public int PageNumber { get; set; }
     public int PageSize { get; set; }
@@ -12,14 +12,12 @@ public class PagedResponse<T> : Response<T>
     public int TotalRecords { get; set; }
     public Uri NextPage { get; set; }
     public Uri PreviousPage { get; set; }
+    public T Data { get; set; }
 
     public PagedResponse(T data, int pageNumber, int pageSize)
     {
         PageNumber = pageNumber;
         PageSize = pageSize;
         Data = data;
-        Message = null;
-        Succeeded = true;
-        Errors = null;
     }
 }

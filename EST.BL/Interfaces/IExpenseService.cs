@@ -11,8 +11,8 @@ namespace EST.BL.Interfaces
 {
     public interface IExpenseService
     {
-        Task<PagedResponse<List<ExpenseDTO>>> GetAll(PaginationFilter filter, CancellationToken token);
-        Task<PagedResponse<List<ExpenseDTO>>> GetAllUserExpenses(PaginationFilter filter, string user, CancellationToken token);
+        Task<PagedResponse<List<PaginationExpenseItemsDTO>>> GetAll(PaginationFilter filter, CancellationToken token);
+        Task<PagedResponse<List<PaginationExpenseItemsDTO>>> GetAllUserExpenses(PaginationFilter filter, string user, CancellationToken token);
         Task<ExpenseDTO> GetById(Guid id, CancellationToken token);
         Task<ExpenseDTO> Create(ExpenseCreateDTO expenseDto,Guid userId, CancellationToken token);
         Task<ExpenseDTO> Update(ExpenseUpdateDTO expenseDto, Guid userId);

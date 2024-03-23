@@ -21,7 +21,7 @@ namespace EST.BL.Services
         {
             _context = context;
         }
-        public async Task<PagedResponse<List<ExpenseDTO>>> GetAll(PaginationFilter filter, CancellationToken token)
+        public async Task<PagedResponse<List<PaginationExpenseItemsDTO>>> GetAll(PaginationFilter filter, CancellationToken token)
         {
             IQueryable<Expense> query = _context.Expenses;
 
@@ -41,15 +41,20 @@ namespace EST.BL.Services
                 .Take(filter.PageSize);
 
             var result = await query
-                .Select(u => new ExpenseDTO()
+                .Include(e => e.ItemExpenses)
+                .ThenInclude(ie => ie.Item)
+                .Select(u => new PaginationExpenseItemsDTO()
                 {
                     Price = u.Price,
-                    Date = u.Date
+                    Date = u.Date,
+                    Name = u.ItemExpenses.Select(ie => ie.Item.Name).ToList(),
+                    Quantity = u.ItemExpenses.Select(ie => ie.Quantity).ToList()
                 })
                 .ToListAsync(token);
-            return new PagedResponse<List<ExpenseDTO>>(result, filter.PageNumber, filter.PageSize);
+                
+            return new PagedResponse<List<PaginationExpenseItemsDTO>>(result, filter.PageNumber, filter.PageSize);
         }
-        public async Task<PagedResponse<List<ExpenseDTO>>> GetAllUserExpenses(PaginationFilter filter, string user, CancellationToken token)
+        public async Task<PagedResponse<List<PaginationExpenseItemsDTO>>> GetAllUserExpenses(PaginationFilter filter, string user, CancellationToken token)
         {
             Guid userId;
             try
@@ -85,13 +90,18 @@ namespace EST.BL.Services
             
             var result = await query
                 .Where(u => u.UserId == userId)
-                .Select(u => new ExpenseDTO()
+                .Include(e => e.ItemExpenses)
+                .ThenInclude(ie => ie.Item)
+                .Select(u => new PaginationExpenseItemsDTO()
                 {
                     Price = u.Price,
-                    Date = u.Date
+                    Date = u.Date,
+                    Name = u.ItemExpenses.Select(ie => ie.Item.Name).ToList(),
+                    Quantity = u.ItemExpenses.Select(ie => ie.Quantity).ToList()
                 })
                 .ToListAsync(token);
-            return new PagedResponse<List<ExpenseDTO>>(result, filter.PageNumber, filter.PageSize);
+            
+            return new PagedResponse<List<PaginationExpenseItemsDTO>>(result, filter.PageNumber, filter.PageSize);
         }
         public async Task<ExpenseDTO> GetById(Guid id, CancellationToken token)
         {
