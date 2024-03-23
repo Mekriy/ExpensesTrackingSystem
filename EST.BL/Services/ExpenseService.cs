@@ -47,8 +47,12 @@ namespace EST.BL.Services
                 {
                     Price = u.Price,
                     Date = u.Date,
-                    Name = u.ItemExpenses.Select(ie => ie.Item.Name).ToList(),
-                    Quantity = u.ItemExpenses.Select(ie => ie.Quantity).ToList()
+                    Items = u.ItemExpenses.Select(x => new ItemExpenseDTO()
+                    {
+                        Name = x.Item.Name,
+                        Price = x.Item.Price,
+                        Quantity = x.Quantity
+                    }).ToList()
                 })
                 .ToListAsync(token);
                 
@@ -96,8 +100,12 @@ namespace EST.BL.Services
                 {
                     Price = u.Price,
                     Date = u.Date,
-                    Name = u.ItemExpenses.Select(ie => ie.Item.Name).ToList(),
-                    Quantity = u.ItemExpenses.Select(ie => ie.Quantity).ToList()
+                    Items = u.ItemExpenses.Select(x => new ItemExpenseDTO()
+                    {
+                        Name = x.Item.Name,
+                        Price = x.Item.Price,
+                        Quantity = x.Quantity
+                    }).ToList()
                 })
                 .ToListAsync(token);
             
@@ -249,6 +257,7 @@ namespace EST.BL.Services
                 new ExpenseItemsDTO()
                 {
                     Name = i.Item.Name,
+                    Price = i.Item.Price,
                     IsPublic = i.Item.IsPublic,
                     Quantity = i.Quantity
                 }).ToListAsync(token);

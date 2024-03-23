@@ -111,7 +111,7 @@ namespace ETS.WebAPI.Controllers
         }
         [HttpPost]
         [Authorize]
-        public async Task<IActionResult> CreateItem([FromQuery] string itemName)
+        public async Task<IActionResult> CreateItem([FromBody] CreateItemDTO item)
         {
             if (!ModelState.IsValid)
                 return BadRequest();
@@ -131,20 +131,20 @@ namespace ETS.WebAPI.Controllers
                 };
             }
             
-            if (itemName == String.Empty)
+            if (item.Name == String.Empty)
                 return BadRequest("No item");
 
-            if (await _itemService.Exist(itemName))
+            if (await _itemService.Exist(item.Name))
                 return BadRequest("Item already exists");
 
-            if (await _itemService.Create(userId, itemName))
+            if (await _itemService.Create(userId, item))
                 return Ok("Item is created");
             else
                 return StatusCode(500, "Error occured while creating item on server");
         }
-        [HttpPut]
+        [HttpPut("itemId:Guid")]
         [Authorize]
-        public async Task<IActionResult> UpdateItem([FromQuery] string itemName)
+        public async Task<IActionResult> UpdateItem([FromRoute] Guid itemId, [FromBody] UpdateItemDTO item)
         {
             if (!ModelState.IsValid)
                 return BadRequest();
@@ -164,17 +164,18 @@ namespace ETS.WebAPI.Controllers
                 };
             }
             
-            if (itemName == String.Empty)
+            if (item.Name == String.Empty)
                 return BadRequest("No item");
 
-            if (!await _itemService.Exist(itemName))
+            if (!await _itemService.Exist(item.Name))
                 return BadRequest("Item doesn't exist");
 
-            if (await _itemService.Update(userId, itemName))
+            if (await _itemService.Update(userId, item, itemId))
                 return Ok("Item is updated!");
             else
                 return StatusCode(500, "Error occured while updating item on server");
         }
+        //TODO: [Authorize(Policy = "Admin")]
         [HttpPut("{adminId:Guid}")]
         public async Task<IActionResult> UpdateItemToPublic([FromRoute] Guid adminId, [FromBody] ItemDTO item)
         {
