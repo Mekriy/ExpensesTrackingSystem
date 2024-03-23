@@ -18,8 +18,8 @@ namespace EST.BL.Interfaces
         Task<List<ItemDTO>> GetPrivateUserItems(Guid userId, CancellationToken token);
         Task<List<ItemDTO>> GetAllUserItems(Guid userId, CancellationToken token);
         Task<List<ItemDTO>> GetItemsForAdminToReview(Guid userId, CancellationToken token);
-        Task<bool> Create(Guid userId, string itemName);
-        Task<bool> Update(Guid userId, string itemName);
+        Task<bool> Create(Guid userId, CreateItemDTO item);
+        Task<bool> Update(Guid userId, UpdateItemDTO item, Guid itemId);
         Task<bool> UpdateToPublic(Guid adminId, ItemDTO itemDto);
         Task<bool> SoftDelete(Guid id);
         Task<bool> Exist(Guid id);

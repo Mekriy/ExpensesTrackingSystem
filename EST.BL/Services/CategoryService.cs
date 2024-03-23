@@ -50,7 +50,7 @@ namespace EST.BL.Services
         }
         public async Task<bool> Update(UpdateCategoryDTO categoryDTO)
         {
-            var category = await _context.Categories.Include(u => u.User).Where(c => c.Name == categoryDTO.OldName).FirstOrDefaultAsync();
+            var category = await _context.Categories.Where(c => c.Name == categoryDTO.OldName).FirstOrDefaultAsync();
             category.Name = categoryDTO.NewName;
             
             _context.Categories.Update(category);

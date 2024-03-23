@@ -3,6 +3,7 @@
     public class Item : BaseEntity
     {
         public string Name { get; set; }
+        public int Price { get; set; }
         public bool IsPublic { get; set; }
         public bool IsDeleted { get; set; }
         public List<Review> Reviews { get; set; }

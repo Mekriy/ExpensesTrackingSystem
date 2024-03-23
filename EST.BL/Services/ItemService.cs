@@ -47,6 +47,7 @@ namespace EST.BL.Services
             return await _context.Items.Where(i => i.UserId == userId && i.IsPublic == false && i.IsDeleted == false).Select(i => new ItemDTO()
             {
                 Name = i.Name,
+                Price = i.Price,
                 IsPublic = i.IsPublic,
             }).ToListAsync(token);
         }
@@ -55,6 +56,7 @@ namespace EST.BL.Services
             return await _context.Items.Where(i => i.UserId == userId && i.IsDeleted == false).Select(i => new ItemDTO()
             {
                 Name = i.Name,
+                Price = i.Price,
                 IsPublic = i.IsPublic,
             }).ToListAsync(token);
         }
@@ -72,14 +74,16 @@ namespace EST.BL.Services
             return await _context.Items.Where(i => i.IsPublic == false && i.IsDeleted == false).Select(i => new ItemDTO()
             {
                 Name = i.Name,
+                Price = i.Price,
                 IsPublic = i.IsPublic,
             }).ToListAsync(token);
         }
-        public async Task<bool> Create(Guid userId, string itemName)
+        public async Task<bool> Create(Guid userId, CreateItemDTO itemDto)
         {
             var item = new Item()
             {
-                Name = itemName,
+                Name = itemDto.Name,
+                Price = itemDto.Price,
                 IsPublic = false,
                 IsDeleted = false,
                 UserId = userId
@@ -87,9 +91,9 @@ namespace EST.BL.Services
             await _context.Items.AddAsync(item);
             return await SaveAsync();
         }
-        public async Task<bool> Update(Guid userId, string itemName)
+        public async Task<bool> Update(Guid userId, UpdateItemDTO itemDto, Guid itemId)
         {
-            var item = await _context.Items.Where(i => i.Name == itemName && i.UserId == userId).FirstOrDefaultAsync();
+            var item = await _context.Items.Where(i => i.Id == itemId && i.UserId == userId).FirstOrDefaultAsync();
             if (item == null)
                 throw new ApiException()
                 {
@@ -97,7 +101,8 @@ namespace EST.BL.Services
                     Title = "Not found",
                     Detail = "Can't find item on server"
                 };
-            item.Name = itemName;
+            item.Name = item.Name;
+            item.Price = item.Price;
             
             _context.Items.Update(item);
             return await SaveAsync();
@@ -116,6 +121,7 @@ namespace EST.BL.Services
                     Detail = "Can't find item on server"
                 };
             item.Name = itemDto.Name;
+            item.Price = itemDto.Price;
             item.IsPublic = itemDto.IsPublic;
 
             _context.Items.Update(item);
