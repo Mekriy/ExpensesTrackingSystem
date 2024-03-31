@@ -9,5 +9,6 @@
         public List<Review> Reviews { get; set; }
         public List<Item> Items { get; set; }
         public PhotoFile PhotoFile { get; set; }
+        public List<Location> Locations { get; set; }
     }
 }

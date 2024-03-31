@@ -26,6 +26,11 @@ namespace EST.DAL.DataAccess.EF.Configurations
                 .WithOne(u => u.User)
                 .HasForeignKey(u => u.UserId)
                 .OnDelete(DeleteBehavior.SetNull);
+            builder
+                .HasMany(l => l.Locations)
+                .WithOne(u => u.User)
+                .HasForeignKey(u => u.UserId)
+                .OnDelete(DeleteBehavior.SetNull);
         }
     }
 }
