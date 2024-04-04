@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using EST.DAL.Models;
 using EST.Domain.Helpers.ErrorFilter;
 using ETS.WebAPI;
 using Serilog;
@@ -21,6 +22,8 @@ builder.Services.AddTransient<IManageImage, ManageImage>();
 builder.Services.AddScoped<IItemService, ItemService>();
 builder.Services.AddScoped<IExpenseService, ExpenseService>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
+builder.Services.AddScoped<IReviewService, ReviewService>();
+builder.Services.AddScoped<ILocationService, LocationService>();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Host.UseSerilog((context, configuration) =>

@@ -24,7 +24,10 @@ namespace EST.BL.Services
         public async Task<PagedResponse<List<PaginationExpenseItemsDTO>>> GetAll(PaginationFilter filter, CancellationToken token)
         {
             IQueryable<Expense> query = _context.Expenses;
-
+            
+            filter.PageNumber = filter.PageNumber < 0 ? 0 : filter.PageNumber;
+            filter.PageSize = filter.PageSize > 5 ? 5 : filter.PageSize;
+            
             query = filter.SortColumn switch
             {
                 "Price" when filter.SortDirection == "asc" =>
@@ -35,28 +38,50 @@ namespace EST.BL.Services
                 "Date" => query.OrderByDescending(t => t.Price),
                 _ => query
             };
-
+    
             query = query
-                .Skip((filter.PageNumber - 1) * filter.PageSize)
+                .Skip(filter.PageNumber)
                 .Take(filter.PageSize);
 
+            var totalRecords = await _context.Expenses.CountAsync();
+            var totalPages = (int)Math.Ceiling(totalRecords / (double)filter.PageSize);
+            
             var result = await query
                 .Include(e => e.ItemExpenses)
                 .ThenInclude(ie => ie.Item)
+                .ThenInclude(ir => ir.Reviews)
+                .Include(c => c.Category)
+                .Include(l => l.ExpenseLocations)
+                .ThenInclude(el => el.Location)
+                .Include(el => el.ExpenseLocations)
+                .ThenInclude(l => l.Location)
                 .Select(u => new PaginationExpenseItemsDTO()
                 {
+                    Id = u.Id,
                     Price = u.Price,
                     Date = u.Date,
+                    CategoryName = u.Category.Name,
+                    Location = u.ExpenseLocations.Select(x => new LocationDTO()
+                    {
+                        Name = x.Location.Name,
+                        Latitude = x.Location.Latitude,
+                        Longitude = x.Location.Longitude,
+                        Address = x.Location.Address,
+                        Save = x.Location.Save
+                    }).FirstOrDefault()!,
                     Items = u.ItemExpenses.Select(x => new ItemExpenseDTO()
                     {
                         Name = x.Item.Name,
                         Price = x.Item.Price,
-                        Quantity = x.Quantity
+                        Quantity = x.Quantity,
+                        Review = x.Item.Reviews
+                            .Where(r => r.ItemId == x.Item.Id)
+                            .Average(t => t.Value)
                     }).ToList()
                 })
                 .ToListAsync(token);
                 
-            return new PagedResponse<List<PaginationExpenseItemsDTO>>(result, filter.PageNumber, filter.PageSize);
+            return new PagedResponse<List<PaginationExpenseItemsDTO>>(result, filter.PageNumber, filter.PageSize, totalRecords, totalPages);
         }
         public async Task<PagedResponse<List<PaginationExpenseItemsDTO>>> GetAllUserExpenses(PaginationFilter filter, string user, CancellationToken token)
         {
@@ -74,6 +99,9 @@ namespace EST.BL.Services
                     Detail = "Can't parse guid. Something went wrong"
                 };
             }
+
+            filter.PageNumber = filter.PageNumber < 0 ? 0 : filter.PageNumber;
+            filter.PageSize = filter.PageSize > 5 ? 5 : filter.PageSize;
             
             IQueryable<Expense> query = _context.Expenses;
 
@@ -89,27 +117,49 @@ namespace EST.BL.Services
             };
 
             query = query
-                .Skip((filter.PageNumber - 1) * filter.PageSize)
+                .Skip(filter.PageNumber)
                 .Take(filter.PageSize);
+
+            var totalRecords = await _context.Expenses.Where(u => u.UserId == userId).CountAsync();
+            var totalPages = (int)Math.Ceiling(totalRecords / (double)filter.PageSize);
             
             var result = await query
                 .Where(u => u.UserId == userId)
                 .Include(e => e.ItemExpenses)
                 .ThenInclude(ie => ie.Item)
+                .ThenInclude(ir => ir.Reviews)
+                .Include(c => c.Category)
+                .Include(l => l.ExpenseLocations)
+                .ThenInclude(el => el.Location)
+                .Include(el => el.ExpenseLocations)
+                .ThenInclude(l => l.Location)
                 .Select(u => new PaginationExpenseItemsDTO()
                 {
+                    Id = u.Id,
                     Price = u.Price,
                     Date = u.Date,
+                    CategoryName = u.Category.Name,
+                    Location = u.ExpenseLocations.Select(x => new LocationDTO()
+                    {
+                        Name = x.Location.Name,
+                        Latitude = x.Location.Latitude,
+                        Longitude = x.Location.Longitude,
+                        Address = x.Location.Address,
+                        Save = x.Location.Save
+                    }).FirstOrDefault(),
                     Items = u.ItemExpenses.Select(x => new ItemExpenseDTO()
                     {
                         Name = x.Item.Name,
                         Price = x.Item.Price,
-                        Quantity = x.Quantity
+                        Quantity = x.Quantity,
+                        Review = x.Item.Reviews
+                            .Where(r => r.ItemId == x.Item.Id)
+                            .Average(t => t.Value)
                     }).ToList()
                 })
                 .ToListAsync(token);
             
-            return new PagedResponse<List<PaginationExpenseItemsDTO>>(result, filter.PageNumber, filter.PageSize);
+            return new PagedResponse<List<PaginationExpenseItemsDTO>>(result, filter.PageNumber, filter.PageSize, totalRecords, totalPages);
         }
         public async Task<ExpenseDTO> GetById(Guid id, CancellationToken token)
         {

@@ -6,7 +6,7 @@ namespace EST.BL.Interfaces
     {
         Task<double> GetItemsRating(Guid itemId, CancellationToken token);
         Task<ReviewDTO> GetReveiwDTO(Guid id, CancellationToken token);
-        Task<bool> Create(Guid itemId, ReviewDTO reviewDTO);
+        Task<bool> Create(Guid itemId, Guid userId, ReviewDTO reviewDTO);
         Task<bool> Delete(Guid reviewId);
         Task<bool> Exist(Guid reviewId);
         Task<bool> SaveAsync();

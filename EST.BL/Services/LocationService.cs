@@ -78,6 +78,16 @@ public class LocationService : ILocationService
         }
     }
 
+    public async Task<bool> AddLocationToExpense(Guid expenseId, Guid locationId)
+    {
+        var expenseLocation = new ExpenseLocation()
+        {
+            ExpenseId = expenseId,
+            LocationId = locationId
+        };
+        _context.ExpensesLocations.Add(expenseLocation);
+        return await _context.SaveChangesAsync() > 0;
+    }
     public async Task<LocationDTO> Update(LocationDTO locationDto, Guid userId)
     {
         var location = await _context.Locations

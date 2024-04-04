@@ -21,28 +21,20 @@ namespace ETS.WebAPI.Controllers
         }
         [HttpGet]
         public async Task<IActionResult> GetAll(
-            [FromQuery] int pageNumber,
-            [FromQuery] int pageSize,
-            [FromQuery] string sortColumn,
-            [FromQuery] string sortDirection,
+            [FromQuery] PaginationFilter filterRequest, 
             CancellationToken token)
         {
-            var filter = new PaginationFilter(pageNumber, pageSize, sortColumn, sortDirection);
-            var expenses = await _expenseService.GetAll(filter, token);
+            var expenses = await _expenseService.GetAll(filterRequest, token);
             return Ok(expenses);
         }
 
         [HttpGet("users")]
         public async Task<IActionResult> GetUserExpensesPagination(
-            [FromQuery] int pageNumber,
-            [FromQuery] int pageSize,
-            [FromQuery] string sortColumn,
-            [FromQuery] string sortDirection,
+            [FromQuery] PaginationFilter filterRequest,
             CancellationToken token)
         {
             var user = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var filter = new PaginationFilter(pageNumber, pageSize, sortColumn, sortDirection);
-            var expenses = await _expenseService.GetAllUserExpenses(filter,user, token);
+            var expenses = await _expenseService.GetAllUserExpenses(filterRequest,user, token);
             return Ok(expenses);
         }
         [HttpGet("{expenseId:Guid}")]

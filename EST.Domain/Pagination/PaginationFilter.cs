@@ -10,7 +10,7 @@ public class PaginationFilter
     public PaginationFilter()
     {
         PageNumber = 1;
-        PageSize = 10;
+        PageSize = 5;
         SortColumn = "name";
         SortDirection = "asc";
     }
@@ -18,7 +18,7 @@ public class PaginationFilter
     public PaginationFilter(int pageNumber, int pageSize, string sortColumn, string sortDirection)
     {
         PageNumber = pageNumber < 1 ? 1 : pageNumber;
-        PageSize = pageSize > 10 ? 10 : pageSize;
+        PageSize = pageSize > 5 ? 5 : pageSize;
         SortColumn = sortColumn;
         SortDirection = sortDirection;
     }

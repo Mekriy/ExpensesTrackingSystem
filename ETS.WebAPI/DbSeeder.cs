@@ -71,11 +71,11 @@ namespace ETS.WebAPI
 
             var locations = new List<Location>
             {
-                new Location { Name = "ATB", Latitude = "49.930665522850425", Longitude = "23.570525944141867", Address = "12 Stepana Bandery Street, Novoiavorivsk, Lviv Oblast, 81054"},
-                new Location { Name = "Privat Bank", Latitude = "49.932198697820404", Longitude = "23.56916338206351", Address = "1 Stepana Bandery Street, Novoiavorivsk, Lviv Oblast, 81053"},
-                new Location { Name = "WOG gas station", Latitude = "49.92592065881233", Longitude = "23.5735749452971", Address = "2 Lvivska Street, Novoiavorivsk, Lviv Oblast, 81053"},
-                new Location { Name = "Lavanda restaurant", Latitude = "49.92766118720214", Longitude = "23.570721074895378", Address = "Sichovikh Striltsiv Street, Novoiavorivsk, Lviv Oblast, 81054"},
-                new Location { Name = "Rukavychka", Latitude = "49.927896015577616", Longitude = "23.573135062999558", Address = "20 Sichovikh Striltsiv Street, Novoyavorivsk, Lviv Oblast, 81054"}
+                new Location { Name = "ATB", Latitude = 49.930665522850425, Longitude = 23.570525944141867, Address = "12 Stepana Bandery Street, Novoiavorivsk, Lviv Oblast, 81054"},
+                new Location { Name = "Privat Bank", Latitude = 49.932198697820404, Longitude = 23.56916338206351, Address = "1 Stepana Bandery Street, Novoiavorivsk, Lviv Oblast, 81053"},
+                new Location { Name = "WOG gas station", Latitude = 49.92592065881233, Longitude = 23.5735749452971, Address = "2 Lvivska Street, Novoiavorivsk, Lviv Oblast, 81053"},
+                new Location { Name = "Lavanda restaurant", Latitude = 49.92766118720214, Longitude = 23.570721074895378, Address = "Sichovikh Striltsiv Street, Novoiavorivsk, Lviv Oblast, 81054"},
+                new Location { Name = "Rukavychka", Latitude = 49.927896015577616, Longitude = 23.573135062999558, Address = "20 Sichovikh Striltsiv Street, Novoyavorivsk, Lviv Oblast, 81054"}
             };
 
             _context.Locations.AddRange(locations);

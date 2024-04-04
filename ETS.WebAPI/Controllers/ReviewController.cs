@@ -23,15 +23,15 @@ namespace ETS.WebAPI.Controllers
                 return NotFound("No review found");
             return Ok(await _reviewService.GetReveiwDTO(reviewId, token));
         }
-        [HttpPost("{itemId:Guid}")]
-        public async Task<IActionResult> CreateReview([FromRoute] Guid itemId, [FromBody] ReviewDTO reviewDTO)
+        [HttpPost]
+        public async Task<IActionResult> CreateReview([FromBody] ReviewDTO reviewDTO)
         {
-            if (itemId == Guid.Empty)
+            if (reviewDTO.ItemId == Guid.Empty)
                 return BadRequest("No guid");
             if (reviewDTO == null)
                 return BadRequest("No review");
 
-            if (await _reviewService.Create(itemId, reviewDTO))
+            if (await _reviewService.Create(reviewDTO.ItemId, reviewDTO.UserId, reviewDTO))
                 return Ok("Created successfully");
             else
                 return StatusCode(500, "Error occured while creating review on server");

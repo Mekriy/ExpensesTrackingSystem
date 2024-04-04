@@ -30,12 +30,13 @@ namespace EST.BL.Services
             var ratings = await _context.Reviews.Where(i => i.ItemId == itemId).ToListAsync(token);
             return ratings.Sum(l => l.Value) / ratings.Count;
         }
-        public async Task<bool> Create(Guid itemId, ReviewDTO reviewDTO)
+        public async Task<bool> Create(Guid itemId, Guid userId, ReviewDTO reviewDTO)
         {
             var review = new Review()
             {
                 Value = reviewDTO.Value,
-                ItemId = itemId
+                ItemId = itemId,
+                UserId = userId
             };
             await _context.Reviews.AddAsync(review);
             return await SaveAsync();
