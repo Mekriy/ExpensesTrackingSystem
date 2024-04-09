@@ -5,6 +5,7 @@ using EST.DAL.Models;
 using EST.Domain.DTOs;
 using EST.Domain.Helpers;
 using EST.Domain.Helpers.ErrorFilter;
+using EST.Domain.Pagination;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -22,96 +23,47 @@ namespace ETS.WebAPI.Controllers
         }
 
         [HttpGet("items")]
-        public async Task<IActionResult> GetAllItems(CancellationToken token)
+        public async Task<IActionResult> GetAllItems(
+            [FromQuery] PaginationFilter filter,
+            CancellationToken token)
         {
-            var items = await _itemService.GetPublicItems(token);
-            if (items == null || items.Count == 0)
-                return BadRequest("There are no items!");
-            else
-                return Ok(items);
+            var items = await _itemService.GetPublicItems(filter, token);
+            return Ok(items);
         }
         [Authorize]
         [HttpGet("user/items")]
-        public async Task<IActionResult> GetUserItems(CancellationToken token)
+        public async Task<IActionResult> GetUserItems(
+            [FromQuery] PaginationFilter filter,
+            CancellationToken token)
         {
-            Guid userId;
-            try
-            {
-                userId = Guid.Parse(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier));
-            }
-            catch (Exception e)
-            {
-                throw new ApiException()
-                {
-                    StatusCode = StatusCodes.Status422UnprocessableEntity,
-                    Title = "Invalid guid",
-                    Detail = "Can't parse user guid"
-                };
-            }
             
-            var items = await _itemService.GetAllUserItems(userId, token);
-            if (items == null || items.Count == 0)
-                throw new ApiException()
-                {
-                    StatusCode = StatusCodes.Status404NotFound,
-                    Title = "No items",
-                    Detail = "There is no items on server"
-                };
-            else
-                return Ok(items);
+            var userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+            
+            var items = await _itemService.GetAllUserItems(filter, userId, token);
+            return Ok(items);
         }
         [HttpGet("review")]
-        public async Task<IActionResult> GetItemsForAdminToReview(CancellationToken token)
+        public async Task<IActionResult> GetItemsForAdminToReview(
+            [FromQuery] PaginationFilter filter,
+            CancellationToken token)
         {
-            Guid userId;
-            try
-            {
-                userId = Guid.Parse(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier));
-            }
-            catch (Exception e)
-            {
-                throw new ApiException()
-                {
-                    StatusCode = StatusCodes.Status422UnprocessableEntity,
-                    Title = "Invalid guid",
-                    Detail = "Can't parse user guid"
-                };
-            }
-            var items = await _itemService.GetItemsForAdminToReview(userId, token);
-            if (items == null || items.Count == 0)
-                throw new ApiException()
-                {
-                    StatusCode = StatusCodes.Status404NotFound,
-                    Title = "No items",
-                    Detail = "No items for admin to review on server"
-                };
-            else
-                return Ok(items);
+            var userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+            
+            var items = await _itemService.GetItemsForAdminToReview(filter, userId, token);
+            return Ok(items);
         }
         [HttpGet("{itemId:Guid}")]
-        public async Task<IActionResult> GetItemById([FromRoute] Guid itemId, CancellationToken token)
+        public async Task<IActionResult> GetItemById(
+            [FromRoute] Guid itemId,
+            CancellationToken token)
         {
             var item = await _itemService.GetById(itemId, token);
-            if (item == null)
-                throw new ApiException()
-                {
-                    StatusCode = StatusCodes.Status404NotFound,
-                    Title = "Item not found",
-                    Detail = "Server didn't find item on database"
-                };
-            return Ok(item);
-        }
-        [HttpGet("{itemName}")]
-        public async Task<IActionResult> GetItemByName([FromRoute] string itemName, CancellationToken token)
-        {
-            var item = await _itemService.GetByName(itemName, token);
-            if (item == null)
-                return NotFound("No item");
             return Ok(item);
         }
         [HttpPost]
         [Authorize]
-        public async Task<IActionResult> CreateItem([FromBody] CreateItemDTO item)
+        public async Task<IActionResult> CreateItem(
+            [FromBody] CreateItemDTO item)
         {
             if (!ModelState.IsValid)
                 return BadRequest();
@@ -144,7 +96,9 @@ namespace ETS.WebAPI.Controllers
         }
         [HttpPut("itemId:Guid")]
         [Authorize]
-        public async Task<IActionResult> UpdateItem([FromRoute] Guid itemId, [FromBody] UpdateItemDTO item)
+        public async Task<IActionResult> UpdateItem(
+            [FromRoute] Guid itemId,
+            [FromBody] UpdateItemDTO item)
         {
             if (!ModelState.IsValid)
                 return BadRequest();
@@ -177,7 +131,9 @@ namespace ETS.WebAPI.Controllers
         }
         //TODO: [Authorize(Policy = "Admin")]
         [HttpPut("{adminId:Guid}")]
-        public async Task<IActionResult> UpdateItemToPublic([FromRoute] Guid adminId, [FromBody] ItemDTO item)
+        public async Task<IActionResult> UpdateItemToPublic(
+            [FromRoute] Guid adminId, 
+            [FromBody] ItemDTO item)
         {
             if (!ModelState.IsValid)
                 return BadRequest();
@@ -194,7 +150,8 @@ namespace ETS.WebAPI.Controllers
                 return StatusCode(500, "Error occured while updating item on server");
         }
         [HttpDelete("{itemId:Guid}")]
-        public async Task<IActionResult> DeleteItem([FromQuery] Guid itemId)
+        public async Task<IActionResult> DeleteItem(
+            [FromQuery] Guid itemId)
         {
             if (itemId == Guid.Empty)
                 return BadRequest("No guid");

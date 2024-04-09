@@ -8,6 +8,7 @@ namespace EST.Domain.DTOs
 {
     public class ItemDTO
     {
+        public Guid Id { get; set; }
         public string Name { get; set; }
         public int Price { get; set; }
         public bool IsPublic { get; set; }

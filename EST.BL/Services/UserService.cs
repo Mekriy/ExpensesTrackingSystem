@@ -4,6 +4,8 @@ using EST.DAL.Models;
 using EST.Domain.DTOs;
 using Microsoft.EntityFrameworkCore;
 using System.Xml.Linq;
+using EST.Domain.Helpers;
+using Microsoft.AspNetCore.Http;
 
 namespace EST.BL.Services
 {
@@ -20,16 +22,20 @@ namespace EST.BL.Services
             var userDTO = new UserDTO()
             {
                 Id = user.Id,
-                RoleName = user.RoleName,
+                Email = user.Email,
+                FirstName = user.FirstName,
+                LastName = user.LastName
             };
             return userDTO;
         }
-        public async Task<UserDTO> Create(UserDTO userDTO)
+        public async Task<UserDTO> Create(CreateUserDTO userDTO)
         {
             var user = new User
             {
                 Id = userDTO.Id,
                 Email = userDTO.Email,
+                FirstName = userDTO.FirstName,
+                LastName = userDTO.LastName,
                 RoleName = userDTO.RoleName,
             };
             await _expensesContext.Users.AddAsync(user);
@@ -39,7 +45,8 @@ namespace EST.BL.Services
                 {
                     Id = user.Id,
                     Email = user.Email,
-                    RoleName = user.RoleName
+                    FirstName = user.FirstName,
+                    LastName = user.LastName,
                 };
             return null;
         }

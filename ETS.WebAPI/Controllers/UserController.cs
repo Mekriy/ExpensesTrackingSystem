@@ -51,13 +51,15 @@ namespace ETS.WebAPI.Controllers
         }
         [Authorize]
         [HttpPost]
-        public async Task<IActionResult> CreateUser()
+        public async Task<IActionResult> CreateUser([FromBody] CreateUserRequestDTO userRequestDto)
         {
-            var user = new UserDTO();
+            var user = new CreateUserDTO();
             try
             {
                 user.Id = Guid.Parse(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier));
                 user.Email = HttpContext.User.FindFirstValue(ClaimTypes.Email);
+                user.FirstName = userRequestDto.FirstName;
+                user.LastName = userRequestDto.LastName;
                 user.RoleName = HttpContext.User.FindFirstValue(ClaimTypes.Role);
             }
             catch (Exception e)
@@ -80,6 +82,32 @@ namespace ETS.WebAPI.Controllers
                     Title = "Can't create user",
                     Detail = "Error occured while creating user on server"
                 };
+        }
+
+        [Authorize]
+        [HttpGet("isCreated")]
+        public async Task<IActionResult> IsUserCreated()
+        {
+            Guid userId;
+            try
+            {
+                userId = Guid.Parse(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier));
+            }
+            catch (Exception e)
+            {
+                throw new ApiException()
+                {
+                    StatusCode = StatusCodes.Status422UnprocessableEntity,
+                    Title = "Something wrong with user Guid",
+                    Detail = "Error occured while parsing guid from user claims"
+                };
+            }
+
+            var result = await _userService.Exist(userId);
+            if (result)
+                return Ok();
+            else
+                return NotFound();
         }
         [HttpDelete]
         [Authorize]
