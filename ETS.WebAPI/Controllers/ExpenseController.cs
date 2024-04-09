@@ -29,6 +29,7 @@ namespace ETS.WebAPI.Controllers
         }
 
         [HttpGet("users")]
+        [Authorize]
         public async Task<IActionResult> GetUserExpensesPagination(
             [FromQuery] PaginationFilter filterRequest,
             CancellationToken token)
