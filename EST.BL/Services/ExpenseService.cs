@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using EST.Domain.Helpers;
 using EST.Domain.Pagination;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 
 namespace EST.BL.Services
 {
@@ -47,6 +48,7 @@ namespace EST.BL.Services
             var totalPages = (int)Math.Ceiling(totalRecords / (double)filter.PageSize);
             
             var result = await query
+                .AsSplitQuery()
                 .Include(e => e.ItemExpenses)
                 .ThenInclude(ie => ie.Item)
                 .ThenInclude(ir => ir.Reviews)
@@ -170,21 +172,24 @@ namespace EST.BL.Services
                 Price = expense.Price
             };
         }
-        public async Task<ExpenseDTO> Create(ExpenseCreateDTO expenseDto,Guid userId, CancellationToken token)
+        public async Task<ExpenseDTO> Create(ExpenseCreateDTO expenseDto, Guid userId, CancellationToken token)
         {
             var expense = new Expense()
             {
                 Price = expenseDto.Price,
-                Date = DateTime.UtcNow,
+                Date = DateTime.Now,
                 CategoryId = expenseDto.CategoryId,
                 UserId = userId
             };
             await _context.Expenses.AddAsync(expense);
-            if (await SaveAsync())
+            if (await _context.SaveChangesAsync() > 0)
             {
-                var expenseGet = await _context.Expenses.Where(e => e.Date == expense.Date).FirstOrDefaultAsync(token);
+                var expenseGet = await _context.Expenses
+                    .Where(e => e.Date == expense.Date)
+                    .FirstOrDefaultAsync(token);
                 return new ExpenseDTO()
                 {
+                    Id = expenseGet.Id,
                     Price = expenseGet.Price,
                     Date = expenseGet.Date
                 };
@@ -194,7 +199,9 @@ namespace EST.BL.Services
         }
         public async Task<ExpenseDTO> Update(ExpenseUpdateDTO expenseDto, Guid userId)
         {
-            var expense = await _context.Expenses.Where(e => e.Id == expenseDto.Id).FirstOrDefaultAsync();
+            var expense = await _context.Expenses
+                .Where(e => e.Id == expenseDto.Id)
+                .FirstOrDefaultAsync();
             if (expense == null)
                 throw new Exception("No expense found to update");
             
@@ -204,7 +211,7 @@ namespace EST.BL.Services
             expense.UserId = userId;
             
             _context.Expenses.Update(expense);
-            var isUpdated = await SaveAsync();
+            var isUpdated = await _context.SaveChangesAsync() > 0;
             if (isUpdated)
                 return new ExpenseDTO()
                 {
@@ -237,11 +244,11 @@ namespace EST.BL.Services
             if (expense == null)
                 return false;
             _context.Expenses.Remove(expense);
-            return await SaveAsync();
+            return await _context.SaveChangesAsync() > 0;
         }
-        public async Task<bool> AddItems(Guid userId, Guid expenseId, List<ItemIdDTO> itemList)
+        public async Task<bool> AddItems(Guid userId, AddItemsToExpenseDTO itemList)
         {
-            if (expenseId == Guid.Empty)
+            if (itemList.ExpenseId == Guid.Empty)
                 throw new ApiException()
                 {
                     StatusCode = StatusCodes.Status400BadRequest,
@@ -249,7 +256,7 @@ namespace EST.BL.Services
                     Detail = "Expense guid is empty"
                 };
 
-            if (itemList == null || itemList.Count == 0)
+            if (itemList == null || itemList.Items.Count == 0)
                 throw new ApiException()
                 {
                     StatusCode = StatusCodes.Status400BadRequest,
@@ -257,7 +264,7 @@ namespace EST.BL.Services
                     Detail = "No items to add on server"
                 };
 
-            var checkForPrivateItems = await CheckForPrivateItems(userId, itemList);
+            var checkForPrivateItems = await CheckForPrivateItems(userId, itemList.Items);
             if(!checkForPrivateItems)
                 throw new ApiException()
                 {
@@ -266,16 +273,16 @@ namespace EST.BL.Services
                     Detail = "not user's private item"
                 };
             
-            List<ItemExpense> list = itemList.Select(i => new ItemExpense()
+            var list = itemList.Items.Select(i => new ItemExpense()
             {
-                ExpenseId = expenseId,
+                ExpenseId = itemList.ExpenseId,
                 ItemId = i.Id,
                 Quantity = i.Quantity
             }).ToList();
           
             _context.ItemExpenses.AddRange(list);
 
-            var result = await SaveAsync();
+            var result = await _context.SaveChangesAsync() > 0;
             if (result)
                 return true;
             else
@@ -312,14 +319,78 @@ namespace EST.BL.Services
                     Quantity = i.Quantity
                 }).ToListAsync(token);
         }
+
+        public async Task<List<CountExpensesByCategoryDTO>> GetExpensesCountByCategory(Guid userId)
+        {
+            var categories = await _context.Categories.ToListAsync();
+            return await _context.Expenses
+                .Where(e => e.UserId == userId)
+                .Include(c => c.Category)
+                .GroupBy(cn => cn.Category.Name)
+                .Select(ce => new CountExpensesByCategoryDTO()
+                {
+                    Name = ce.Key,
+                    Count = ce.Count()
+                }).ToListAsync();
+        }
+
+        public async Task<List<LastFiveExpensesDTO>> GetLastFiveExpenses(Guid userId)
+        {
+            var todayStart = DateTime.Today;
+            var todayEnd = DateTime.Today.AddDays(1);
+            return await _context.Expenses
+                .Where(e => e.UserId == userId && e.Date > todayStart && e.Date < todayEnd)
+                .Include(c => c.Category)
+                .OrderByDescending(d => d.Date)
+                .Take(5)
+                .Select(cn => new LastFiveExpensesDTO()
+                {
+                    Price = cn.Price,
+                    Date = cn.Date,
+                    Category = cn.Category.Name
+                })
+                .ToListAsync();
+        }
+
+        public async Task<MonthlyOverviewDTO> GetMonthlyOverview(Guid userId, CancellationToken token)
+        {
+            var now = DateTime.UtcNow;
+            var thisMonthStartDate = new DateTime(now.Year, now.Month, 1);
+            var thisMonthEndDate = thisMonthStartDate.AddMonths(1).AddSeconds(-1);
+
+            var previousMonthStartDate = new DateTime(now.Year, now.Month - 1, 1);
+            var previousMonthEndDate = previousMonthStartDate.AddMonths(1).AddDays(-1);
+
+            var todayStart = DateTime.Today;
+            var todayEnd = DateTime.Today.AddDays(1);
+
+            var statistic = await _context.Users
+                .Select(t => new
+                {
+                    t.Id,
+                    ResultThisMonth = t.Expenses
+                        .Where(u => u.Date > thisMonthStartDate && u.Date < thisMonthEndDate)
+                        .Average(u => (double?)u.Price),
+                    ResultPreviousMonth = t.Expenses
+                        .Where(u => u.Date > previousMonthStartDate && u.Date < previousMonthEndDate)
+                        .Average(u => (double?)u.Price),
+                    ResultDaily = t.Expenses
+                        .Where(u => u.Date > todayStart && u.Date < todayEnd)
+                        .Average(u => (double?)u.Price)
+                    
+                })
+                .FirstOrDefaultAsync(t => t.Id == userId, token);
+            
+            return new MonthlyOverviewDTO()
+            {
+                ThisMonth = statistic.ResultThisMonth ?? 0, 
+                PreviousMonth = statistic.ResultPreviousMonth ?? 0,
+                Daily = statistic.ResultDaily ?? 0
+            };
+        }
         public async Task<bool> Exist(Guid id)
         {
             return await _context.Expenses.Where(i => i.Id == id).AnyAsync();
-        }
-        public async Task<bool> SaveAsync()
-        {
-            var saved = await _context.SaveChangesAsync();
-            return saved > 0 ? true : false;
         }
     }
 }

@@ -16,17 +16,18 @@ namespace EST.BL.Services
         {
             _expensesContext = expensesContext;
         }
-        public async Task<UserDTO> GetById(Guid userId, CancellationToken token)
+        public async Task<UserWithPhotoDTO?> GetById(Guid userId, CancellationToken token)
         {
-            var user = await _expensesContext.Users.Where(u => u.Id == userId).FirstOrDefaultAsync(token);
-            var userDTO = new UserDTO()
-            {
-                Id = user.Id,
-                Email = user.Email,
-                FirstName = user.FirstName,
-                LastName = user.LastName
-            };
-            return userDTO;
+            return await _expensesContext.Users
+                .Include(p => p.PhotoFile)
+                .Where(u => u.Id == userId)
+                .Select(x => new UserWithPhotoDTO()
+                {
+                    Email = x.Email,
+                    FirstName = x.FirstName,
+                    LastName = x.LastName,
+                    FileName = x.PhotoFile.FileName
+                }).FirstOrDefaultAsync(token);
         }
         public async Task<UserDTO> Create(CreateUserDTO userDTO)
         {

@@ -1,6 +1,8 @@
+using System.Security.Claims;
 using EST.BL.Interfaces;
 using EST.Domain.DTOs;
 using EST.Domain.Helpers;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ETS.WebAPI.Controllers
@@ -16,17 +18,32 @@ namespace ETS.WebAPI.Controllers
             _locationService = locationService;
         }
 
-        [HttpPost("{userId:Guid}")]
-        public async Task<IActionResult> Create([FromRoute] Guid userId, [FromBody] LocationDTO locationDto)
+        [Authorize]
+        [HttpPost]
+        public async Task<IActionResult> Create([FromBody] LocationDTO locationDto)
         {
-            var result = await _locationService.Create(locationDto, userId);
+            Guid userParseId;
+            try
+            {
+                userParseId = Guid.Parse(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier));
+            }
+            catch (Exception e)
+            {
+                throw new ApiException()
+                {
+                    StatusCode = StatusCodes.Status422UnprocessableEntity,
+                    Title = "Something wrong with user Guid",
+                    Detail = "Error occured while parsing guid from user claims"
+                };
+            }
+            var result = await _locationService.Create(locationDto, userParseId);
             return Ok(result);
         }
-
-        [HttpPost("{expenseId:Guid}/{locationId:Guid}")]
-        public async Task<IActionResult> AddLocationToExpense([FromRoute] Guid expenseId, [FromRoute] Guid locationId)
+        [Authorize]
+        [HttpPost("add-location")]
+        public async Task<IActionResult> AddLocationToExpense([FromBody] AddLocationToExpenseDTO location)
         {
-            var result = await _locationService.AddLocationToExpense(expenseId, locationId);
+            var result = await _locationService.AddLocationToExpense(location);
             if (result)
                 return Ok();
             else

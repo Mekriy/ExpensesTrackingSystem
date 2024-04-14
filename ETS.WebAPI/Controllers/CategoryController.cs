@@ -2,6 +2,8 @@
 using EST.BL.Services;
 using EST.DAL.Models;
 using EST.Domain.DTOs;
+using EST.Domain.Helpers;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ETS.WebAPI.Controllers
@@ -28,7 +30,7 @@ namespace ETS.WebAPI.Controllers
             return Ok(category);
         }
         [HttpPost]
-        public async Task<IActionResult> CreateCategory([FromBody] CategoryDTO categoryDto)
+        public async Task<IActionResult> CreateCategory([FromBody] CreateCategoryDTO categoryDto)
         {
             if (!ModelState.IsValid)
                 return BadRequest();
@@ -41,26 +43,22 @@ namespace ETS.WebAPI.Controllers
             else
                 return StatusCode(500, "Error occured while creating category on server");
         }
-        [HttpPut]
-        public async Task<IActionResult> UpdateUser([FromBody] UpdateCategoryDTO categoryDto)
+
+        [Authorize]
+        [HttpGet]
+        public async Task<IActionResult> GetCategories()
         {
-            if (!ModelState.IsValid)
-                return BadRequest();
-
-            if (categoryDto == null)
-                return BadRequest("No category");
-
-            if (categoryDto.UserId == Guid.Empty)
-                return BadRequest("No user guid! Cannot update!");
-
-            if (!await _categoryService.Exist(categoryDto.OldName))
-                return BadRequest("Category for update doesn't exist");
-
-            if (await _categoryService.Update(categoryDto))
-                return Ok("Category is updated!");
-            else
-                return StatusCode(500, "Error occured while updating category on server");
+            var result = await _categoryService.GetPublic();
+            if (result.Count > 0)
+                return Ok(result);
+            throw new ApiException()
+            {
+                StatusCode = StatusCodes.Status404NotFound,
+                Title = "Not found",
+                Detail = "There is no categories"
+            };
         }
+        
         [HttpDelete("{categoryId:Guid}")]
         public async Task<IActionResult> DeleteCategory([FromRoute] Guid categoryId)
         {

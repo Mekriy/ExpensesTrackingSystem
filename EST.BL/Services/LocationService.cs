@@ -40,7 +40,7 @@ public class LocationService : ILocationService
         };
     }
 
-    public async Task<LocationDTO> Create(LocationDTO locationDto, Guid userId)
+    public async Task<CreatedLocationDTO> Create(LocationDTO locationDto, Guid userId)
     {
         var location = new Location
         {
@@ -58,13 +58,10 @@ public class LocationService : ILocationService
             var createdLocation = await _context.Locations
                 .Where(l => l.Address == location.Address && l.UserId == userId)
                 .FirstOrDefaultAsync();
-            return new LocationDTO()
+            return new CreatedLocationDTO()
             {
+                Id = createdLocation.Id,
                 Name = createdLocation.Name,
-                Latitude = createdLocation.Latitude,
-                Longitude = createdLocation.Longitude,
-                Address = createdLocation.Address,
-                Save = createdLocation.Save
             };
         }
         else
@@ -78,12 +75,21 @@ public class LocationService : ILocationService
         }
     }
 
-    public async Task<bool> AddLocationToExpense(Guid expenseId, Guid locationId)
+    public async Task<bool> AddLocationToExpense(AddLocationToExpenseDTO location)
     {
+        var resultExpense = await _context.Expenses.AnyAsync(e => e.Id == location.ExpenseId);
+        var resultLocation = await _context.Locations.AnyAsync(l => l.Id == location.LocationId);
+        if (!resultExpense || !resultLocation)
+            throw new ApiException()
+            {
+                StatusCode = StatusCodes.Status400BadRequest,
+                Title = "Wrong id",
+                Detail = "There is no such location or expense with this id's on db"
+            };
         var expenseLocation = new ExpenseLocation()
         {
-            ExpenseId = expenseId,
-            LocationId = locationId
+            ExpenseId = location.ExpenseId,
+            LocationId = location.LocationId
         };
         _context.ExpensesLocations.Add(expenseLocation);
         return await _context.SaveChangesAsync() > 0;
