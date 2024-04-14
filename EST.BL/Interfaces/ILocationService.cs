@@ -5,8 +5,8 @@ namespace EST.BL.Interfaces;
 public interface ILocationService
 {
     Task<List<LocationDTO>> GetUserSavedLocation(Guid userId);
-    Task<LocationDTO> Create(LocationDTO locationDto, Guid userId);
-    Task<bool> AddLocationToExpense(Guid expenseId, Guid locationId);
+    Task<CreatedLocationDTO> Create(LocationDTO locationDto, Guid userId);
+    Task<bool> AddLocationToExpense(AddLocationToExpenseDTO location);
     Task<LocationDTO> Update(LocationDTO locationDto, Guid userId);
     Task<bool> Delete(Guid locationId);
 }

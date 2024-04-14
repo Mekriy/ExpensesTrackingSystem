@@ -182,8 +182,8 @@ namespace ETS.WebAPI.Controllers
             var result = await _manageImage.UploadFile(file, userParseId);
             return Ok(result);
         }
-        [HttpGet("fileName")]
-        public async Task<IActionResult> DownloadPhoto([FromQuery] string fileName)
+        [HttpGet("{fileName}")]
+        public async Task<IActionResult> DownloadPhoto([FromRoute] string fileName)
         {
             var result = await _manageImage.DownloadFile(fileName);
             return File(result.Item1, result.Item2, result.Item3);

@@ -31,7 +31,8 @@ builder.Host.UseSerilog((context, configuration) =>
 
 builder.Services.AddDbContext<ExpensesContext>(options =>
 {
-    options.UseSqlServer(builder.Configuration.GetConnectionString("db"));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("db"))
+        .LogTo(Console.WriteLine, new[] { DbLoggerCategory.Database.Command.Name }, LogLevel.Information);
 });
 
 

@@ -21,27 +21,42 @@ namespace ETS.WebAPI.Controllers
         {
             _itemService = itemService;
         }
-
-        [HttpGet("items")]
+        [Authorize]
+        [HttpGet]
         public async Task<IActionResult> GetAllItems(
             [FromQuery] PaginationFilter filter,
             CancellationToken token)
         {
-            var items = await _itemService.GetPublicItems(filter, token);
+            var userId = "";
+            try
+            {
+                userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+            }
+            catch (Exception e)
+            {
+                throw new ApiException()
+                {
+                    StatusCode = StatusCodes.Status422UnprocessableEntity,
+                    Title = "Invalid guid",
+                    Detail = "Can't parse user guid"
+                };
+            }            
+
+            var items = await _itemService.GetItems(filter, userId, token);
             return Ok(items);
         }
-        [Authorize]
-        [HttpGet("user/items")]
-        public async Task<IActionResult> GetUserItems(
-            [FromQuery] PaginationFilter filter,
-            CancellationToken token)
-        {
-            
-            var userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
-            
-            var items = await _itemService.GetAllUserItems(filter, userId, token);
-            return Ok(items);
-        }
+        // [Authorize]
+        // [HttpGet("user/items")]
+        // public async Task<IActionResult> GetUserItems(
+        //     [FromQuery] PaginationFilter filter,
+        //     CancellationToken token)
+        // {
+        //     
+        //     var userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+        //     
+        //     var items = await _itemService.GetAllUserItems(filter, userId, token);
+        //     return Ok(items);
+        // }
         [HttpGet("review")]
         public async Task<IActionResult> GetItemsForAdminToReview(
             [FromQuery] PaginationFilter filter,

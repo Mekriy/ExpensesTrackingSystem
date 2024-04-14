@@ -17,9 +17,9 @@ namespace EST.BL.Services
         {
             return await _context.Categories.Where(i => i.Id == id).FirstOrDefaultAsync(token);
         }
-        public async Task<bool> Create(CategoryDTO categoryDTO)
+        public async Task<bool> Create(CreateCategoryDTO categoryDTO)
         {
-            var user = await _context.Users.Where(i => i.Id == categoryDTO.UserId).FirstOrDefaultAsync();
+            var user = await _context.Users.Where(i => i.Id == categoryDTO.userId).FirstOrDefaultAsync();
             if (user == null)
                 return false;
 
@@ -31,7 +31,7 @@ namespace EST.BL.Services
                     Name = categoryDTO.Name,
                     IsPublic = true,
                     IsDeleted = false,
-                    UserId = categoryDTO.UserId,
+                    UserId = categoryDTO.userId,
                 };
             }
             else
@@ -41,7 +41,7 @@ namespace EST.BL.Services
                     Name = categoryDTO.Name,
                     IsPublic = false,
                     IsDeleted = false,
-                    UserId = categoryDTO.UserId,
+                    UserId = categoryDTO.userId,
                 };
             }
 
@@ -79,6 +79,19 @@ namespace EST.BL.Services
         {
             var saved = await _context.SaveChangesAsync();
             return saved > 0 ? true : false;
+        }
+
+        public async Task<List<CategoryDTO>> GetPublic()
+        {
+            var result = await _context.Categories
+                .Where(c => c.IsPublic)
+                .Select(c => new CategoryDTO()
+                {
+                    Id = c.Id,
+                    Name = c.Name
+                })
+                .ToListAsync();
+            return result;
         }
     }
 }

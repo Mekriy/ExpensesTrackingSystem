@@ -44,21 +44,8 @@ namespace EST.BL.Services
                 };
             }
         }
-        public async Task<PagedResponse<List<ItemDTO>>> GetPublicItems(PaginationFilter filter, CancellationToken token)
+        public async Task<PagedResponse<List<ItemDTO>>> GetItems(PaginationFilter filter, string userId, CancellationToken token)
         {
-            filter.IsPublicItem = true;
-            var query = await QueryBuilder(filter, "");
-            
-            var totalRecords = await _context.Items.CountAsync(token);
-            var totalPages = (int)Math.Ceiling(totalRecords / (double)filter.PageSize);
-
-            var result = await GetItems(query, token);
-            
-            return new PagedResponse<List<ItemDTO>>(result, filter.PageNumber, filter.PageSize, totalRecords, totalPages);
-        }
-        public async Task<PagedResponse<List<ItemDTO>>> GetPrivateUserItems(PaginationFilter filter, string userId, CancellationToken token)
-        {
-            filter.IsPublicItem = false;
             var query = await QueryBuilder(filter, userId);
             
             var totalRecords = await _context.Items.CountAsync(token);
@@ -67,19 +54,6 @@ namespace EST.BL.Services
             var result = await GetItems(query, token);
             
             return new PagedResponse<List<ItemDTO>>(result, filter.PageNumber, filter.PageSize, totalRecords, totalPages);
-        }
-        public async Task<PagedResponse<List<ItemDTO>>> GetAllUserItems(PaginationFilter filter, string userId, CancellationToken token)
-        {
-            filter.IsPublicItem = null;
-            var query = await QueryBuilder(filter, userId);
-            
-            var totalRecords = await _context.Items.CountAsync(token);
-            var totalPages = (int)Math.Ceiling(totalRecords / (double)filter.PageSize);
-
-            var result = await GetItems(query, token);
-            
-            return new PagedResponse<List<ItemDTO>>(result, filter.PageNumber, filter.PageSize, totalRecords, totalPages);
-
         }
         public async Task<PagedResponse<List<ItemDTO>>> GetItemsForAdminToReview(PaginationFilter filter, string userId, CancellationToken token)
         {
@@ -108,7 +82,6 @@ namespace EST.BL.Services
                     Detail = "Forbidden. User's role is not admin"
                 };
             }
-            filter.IsPublicItem = false;
             var query = await QueryBuilder(filter, "");
             
             var totalRecords = await _context.Items.CountAsync(token);
@@ -131,7 +104,12 @@ namespace EST.BL.Services
                 try
                 {
                     userGuid = Guid.Parse(userId);
-                    query = query.Where(i => i.UserId == userGuid);
+                    query = filter.TypeItemsVisibility switch
+                    {
+                        "user" => query.Where(i => i.UserId == userGuid),
+                        "all" => query,
+                        _ => query
+                    };
                 }
                 catch (Exception e)
                 {
@@ -143,13 +121,6 @@ namespace EST.BL.Services
                     };
                 }
             }
-            
-            query = filter.IsPublicItem switch
-            {
-                true => query.Where(i => i.IsPublic),
-                false => query.Where(i => !i.IsPublic),
-                _ => query
-            };
             
             query = filter.SortColumn switch
             {
@@ -178,7 +149,8 @@ namespace EST.BL.Services
                     Price = i.Price,
                     IsPublic = i.IsPublic,
                     Value = i.Reviews.Any(r => r.ItemId == i.Id) ? 
-                        i.Reviews.Where(r => r.ItemId == i.Id).Average(t => t.Value) : 0
+                        i.Reviews.Where(r => r.ItemId == i.Id).Average(t => t.Value) : 0,
+                    Quantity = 1
                 }).ToListAsync(token);
         }
         public async Task<bool> Create(Guid userId, CreateItemDTO itemDto)

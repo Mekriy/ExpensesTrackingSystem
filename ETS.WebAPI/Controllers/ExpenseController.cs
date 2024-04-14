@@ -73,13 +73,12 @@ namespace ETS.WebAPI.Controllers
             var createdExpense = await _expenseService.Create(expense, userParseId, token);
             if (createdExpense != null)
                 return Ok(createdExpense);
-            else
-                throw new ApiException()
-                {
-                    StatusCode = StatusCodes.Status500InternalServerError,
-                    Title = "Can't create expense",
-                    Detail = "Error occured while creating expense on server"
-                };
+            throw new ApiException()
+            {
+                StatusCode = StatusCodes.Status500InternalServerError,
+                Title = "Can't create expense",
+                Detail = "Error occured while creating expense on server"
+            };
         }
         [HttpPut]
         public async Task<IActionResult> UpdateExpense([FromBody] ExpenseUpdateDTO expense)
@@ -108,30 +107,28 @@ namespace ETS.WebAPI.Controllers
             var result = await _expenseService.Update(expense, userParseId);
             if (result != null)
                 return Ok(result);
-            else
-                throw new ApiException()
-                {
-                    StatusCode = StatusCodes.Status500InternalServerError,
-                    Title = "Can't update expense",
-                    Detail = "Error occured while updating expense on server"
-                };
+            throw new ApiException()
+            {
+                StatusCode = StatusCodes.Status500InternalServerError,
+                Title = "Can't update expense",
+                Detail = "Error occured while updating expense on server"
+            };
         }
         [HttpDelete("{expenseId:Guid}")]
         public async Task<IActionResult> DeleteExpense([FromRoute] Guid expenseId)
         {
             if (await _expenseService.Delete(expenseId))
                 return Ok("Expense is deleted!");
-            else
-                throw new ApiException()
-                {
-                    StatusCode = StatusCodes.Status500InternalServerError,
-                    Title = "Can't delete expense",
-                    Detail = "Error occured while deleting expense on server"
-                };
+            throw new ApiException()
+            {
+                StatusCode = StatusCodes.Status500InternalServerError,
+                Title = "Can't delete expense",
+                Detail = "Error occured while deleting expense on server"
+            };
         }
-        [HttpPut("{expenseId:Guid}")]
         [Authorize]
-        public async Task<IActionResult> AddItemsToExpense([FromRoute] Guid expenseId, [FromBody] List<ItemIdDTO> itemList)
+        [HttpPost("add-items")]
+        public async Task<IActionResult> AddItemsToExpense([FromBody] AddItemsToExpenseDTO itemList)
         {
             Guid userParseId;
             try
@@ -147,15 +144,17 @@ namespace ETS.WebAPI.Controllers
                     Detail = "Error occured while parsing guid from user claims"
                 };
             }
-            if (await _expenseService.AddItems(userParseId, expenseId, itemList))
-                return Ok("Items successfully added to expense!");
-            else
-                throw new ApiException()
+            if (await _expenseService.AddItems(userParseId, itemList))
+                return Ok(new 
                 {
-                    StatusCode = StatusCodes.Status500InternalServerError,
-                    Title = "Can't add items",
-                    Detail = "Error occured while adding items to expense"
-                };
+                    message = "Items successfully added to expense!"
+                });
+            throw new ApiException()
+            {
+                StatusCode = StatusCodes.Status500InternalServerError,
+                Title = "Can't add items",
+                Detail = "Error occured while adding items to expense"
+            };
         }
         [HttpGet("{expenseId:Guid}/items")]
         public async Task<IActionResult> GetExpenseItems([FromRoute] Guid expenseId, CancellationToken token)
@@ -176,8 +175,96 @@ namespace ETS.WebAPI.Controllers
                     Title = "Can't find items",
                     Detail = "There is no items for this expense"
                 };
-            else
-                return Ok(expenseItems);
+            return Ok(expenseItems);
+        }
+        
+        [Authorize]
+        [HttpGet("expenses-by-category")]
+        public async Task<IActionResult> GetExpensesByCategory()
+        {
+            Guid userParseId;
+            try
+            {
+                userParseId = Guid.Parse(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier));
+            }
+            catch (Exception e)
+            {
+                throw new ApiException()
+                {
+                    StatusCode = StatusCodes.Status422UnprocessableEntity,
+                    Title = "Something wrong with user Guid",
+                    Detail = "Error occured while parsing guid from user claims"
+                };
+            }
+            
+            var result = await _expenseService.GetExpensesCountByCategory(userParseId);
+            if(result.Count == 0 || result == null)
+                throw new ApiException()
+                {
+                    StatusCode = StatusCodes.Status404NotFound,
+                    Title = "No expenses by category",
+                    Detail = "There is no such expenses by categories. Create them first"
+                };
+            return Ok(result);
+        }
+
+        [Authorize]
+        [HttpGet("last-five")]
+        public async Task<IActionResult> GetLastTodayFiveExpenses()
+        {
+            Guid userParseId;
+            try
+            {
+                userParseId = Guid.Parse(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier));
+            }
+            catch (Exception e)
+            {
+                throw new ApiException()
+                {
+                    StatusCode = StatusCodes.Status422UnprocessableEntity,
+                    Title = "Something wrong with user Guid",
+                    Detail = "Error occured while parsing guid from user claims"
+                };
+            }
+
+            var result = await _expenseService.GetLastFiveExpenses(userParseId);
+            if(result.Count == 0 || result == null)
+                throw new ApiException()
+                {
+                    StatusCode = StatusCodes.Status404NotFound,
+                    Title = "No last expenses from today",
+                    Detail = "There is no such expenses created today. Create them first"
+                };
+            return Ok(result);
+        }
+        
+        [Authorize]
+        [HttpGet("monthly-overview")]
+        public async Task<IActionResult> GetMonthlyOverview(CancellationToken token)
+        {
+            Guid userParseId;
+            try
+            {
+                userParseId = Guid.Parse(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier));
+            }
+            catch (Exception e)
+            {
+                throw new ApiException()
+                {
+                    StatusCode = StatusCodes.Status422UnprocessableEntity,
+                    Title = "Something wrong with user Guid",
+                    Detail = "Error occured while parsing guid from user claims"
+                };
+            }
+            var result = await _expenseService.GetMonthlyOverview(userParseId, token);
+            if (result == null)
+                throw new ApiException()
+                {
+                    StatusCode = StatusCodes.Status404NotFound,
+                    Title = "No expenses for monthly overview",
+                    Detail = "No expenses to calculate monthly overview"
+                };
+            return Ok(result);
         }
     }
 }
