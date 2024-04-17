@@ -126,6 +126,20 @@ namespace ETS.WebAPI.Controllers
                 Detail = "Error occured while deleting expense on server"
             };
         }
+
+        [Authorize]
+        [HttpDelete("expenses")]
+        public async Task<IActionResult> DeleteExpenses([FromBody] List<ExpenseIdsDTO> toDelete)
+        {
+            if (await _expenseService.DeleteExpenses(toDelete))
+                return Ok("Expense is deleted!");
+            throw new ApiException()
+            {
+                StatusCode = StatusCodes.Status500InternalServerError,
+                Title = "Can't delete expense",
+                Detail = "Error occured while deleting expense on server"
+            };
+        }
         [Authorize]
         [HttpPost("add-items")]
         public async Task<IActionResult> AddItemsToExpense([FromBody] AddItemsToExpenseDTO itemList)
@@ -154,6 +168,35 @@ namespace ETS.WebAPI.Controllers
                 StatusCode = StatusCodes.Status500InternalServerError,
                 Title = "Can't add items",
                 Detail = "Error occured while adding items to expense"
+            };
+        }
+
+        [HttpPut("items")]
+        public async Task<IActionResult> UpdateItemsToExpense([FromBody] AddItemsToExpenseDTO updateDto)
+        {
+            Guid userParseId;
+            try
+            {
+                userParseId = Guid.Parse(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier));
+            }
+            catch (Exception e)
+            {
+                throw new ApiException()
+                {
+                    StatusCode = StatusCodes.Status422UnprocessableEntity,
+                    Title = "Something wrong with user Guid",
+                    Detail = "Error occured while parsing guid from user claims"
+                };
+            }
+
+            var result = await _expenseService.UpdateItemsToExpense(updateDto, userParseId);
+            if (result)
+                return Ok();
+            throw new ApiException()
+            {
+                StatusCode = StatusCodes.Status500InternalServerError,
+                Title = "Can't update",
+                Detail = "Error occured while updating item expense"
             };
         }
         [HttpGet("{expenseId:Guid}/items")]

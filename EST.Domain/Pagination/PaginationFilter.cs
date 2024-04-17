@@ -7,6 +7,7 @@ public class PaginationFilter
     public string? SortColumn { get; set; }
     public string SortDirection { get; set; }
     public string? TypeItemsVisibility { get; set; }
+    public string? Filter { get; set; }
 
     public PaginationFilter()
     {
@@ -15,6 +16,7 @@ public class PaginationFilter
         SortColumn = "name";
         SortDirection = "asc";
         TypeItemsVisibility = "all";
+        Filter = "";
     }
 
     public PaginationFilter(int pageNumber, int pageSize, string sortColumn, string sortDirection)

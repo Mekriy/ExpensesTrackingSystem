@@ -6,6 +6,6 @@ public class PaginationExpenseItemsDTO
     public int Price { get; set; }
     public DateTime Date { get; set; }
     public string CategoryName { get; set; }
-    public LocationDTO Location { get; set; }
+    public DropdownLocationDTO Location { get; set; }
     public List<ItemExpenseDTO> Items { get; set; }
 }

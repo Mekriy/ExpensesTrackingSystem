@@ -2,6 +2,8 @@
 using EST.DAL.DataAccess.EF;
 using EST.DAL.Models;
 using EST.Domain.DTOs;
+using EST.Domain.Helpers;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 
 namespace EST.BL.Services
@@ -17,11 +19,11 @@ namespace EST.BL.Services
         {
             return await _context.Categories.Where(i => i.Id == id).FirstOrDefaultAsync(token);
         }
-        public async Task<bool> Create(CreateCategoryDTO categoryDTO)
+        public async Task<CategoryDTO> Create(CreateCategoryDTO categoryDTO, Guid userId)
         {
-            var user = await _context.Users.Where(i => i.Id == categoryDTO.userId).FirstOrDefaultAsync();
+            var user = await _context.Users.Where(i => i.Id == userId).FirstOrDefaultAsync();
             if (user == null)
-                return false;
+                return null;
 
             Category category;
             if (user.RoleName == "Admin")
@@ -31,7 +33,7 @@ namespace EST.BL.Services
                     Name = categoryDTO.Name,
                     IsPublic = true,
                     IsDeleted = false,
-                    UserId = categoryDTO.userId,
+                    UserId = userId,
                 };
             }
             else
@@ -41,12 +43,21 @@ namespace EST.BL.Services
                     Name = categoryDTO.Name,
                     IsPublic = false,
                     IsDeleted = false,
-                    UserId = categoryDTO.userId,
+                    UserId = userId,
                 };
             }
-
             await _context.Categories.AddAsync(category);
-            return await SaveAsync();
+            if (await _context.SaveChangesAsync() > 0)
+                return new CategoryDTO()
+                {
+                    Name = category.Name
+                };
+            throw new ApiException()
+            {
+                StatusCode = StatusCodes.Status500InternalServerError,
+                Title = "Can't create category",
+                Detail = "Error occured while creating category on server"
+            };
         }
         public async Task<bool> Update(UpdateCategoryDTO categoryDTO)
         {
@@ -85,6 +96,18 @@ namespace EST.BL.Services
         {
             var result = await _context.Categories
                 .Where(c => c.IsPublic)
+                .Select(c => new CategoryDTO()
+                {
+                    Id = c.Id,
+                    Name = c.Name
+                })
+                .ToListAsync();
+            return result;
+        }
+        public async Task<List<CategoryDTO>> GetUsers(Guid userId)
+        {
+            var result = await _context.Categories
+                .Where(c => c.UserId == userId)
                 .Select(c => new CategoryDTO()
                 {
                     Id = c.Id,

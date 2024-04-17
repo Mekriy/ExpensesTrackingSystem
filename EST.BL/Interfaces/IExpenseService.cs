@@ -17,10 +17,12 @@ namespace EST.BL.Interfaces
         Task<ExpenseDTO> Create(ExpenseCreateDTO expenseDto,Guid userId, CancellationToken token);
         Task<ExpenseDTO> Update(ExpenseUpdateDTO expenseDto, Guid userId);
         Task<bool> Delete(Guid id);
+        Task<bool> DeleteExpenses(List<ExpenseIdsDTO> toDelete);
         Task<bool> AddItems(Guid userId, AddItemsToExpenseDTO itemList);
         Task<List<ExpenseItemsDTO>> GetExpenseItems(Guid id, CancellationToken token);
         Task<List<CountExpensesByCategoryDTO>> GetExpensesCountByCategory(Guid userId);
         Task<List<LastFiveExpensesDTO>> GetLastFiveExpenses(Guid userId);
         Task<MonthlyOverviewDTO> GetMonthlyOverview(Guid userId, CancellationToken token);
+        Task<bool> UpdateItemsToExpense(AddItemsToExpenseDTO updateDto, Guid userParseId);
     }
 }
