@@ -48,7 +48,7 @@ namespace EST.BL.Services
         {
             var query = await QueryBuilder(filter, userId);
             
-            var totalRecords = await _context.Items.CountAsync(token);
+            var totalRecords = await query.CountAsync(token);
             var totalPages = (int)Math.Ceiling(totalRecords / (double)filter.PageSize);
 
             var result = await GetItems(query, token);
@@ -107,8 +107,8 @@ namespace EST.BL.Services
                     query = filter.TypeItemsVisibility switch
                     {
                         "user" => query.Where(i => i.UserId == userGuid),
-                        "all" => query,
-                        _ => query
+                        "all" => query.Where(i => i.IsPublic),
+                        _ => query.Where(i => i.IsPublic)
                     };
                 }
                 catch (Exception e)

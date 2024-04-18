@@ -62,7 +62,7 @@ namespace EST.BL.Services
                 .Skip(filter.PageNumber)
                 .Take(filter.PageSize);
 
-            var totalRecords = await _context.Expenses.CountAsync();
+            var totalRecords = await query.CountAsync();
             var totalPages = (int)Math.Ceiling(totalRecords / (double)filter.PageSize);
             
             var result = await query
@@ -497,7 +497,7 @@ namespace EST.BL.Services
                 Daily = statistic.ResultDaily ?? 0
             };
         }
-        public async Task<bool> Exist(Guid id)
+        private async Task<bool> Exist(Guid id)
         {
             return await _context.Expenses.Where(i => i.Id == id).AnyAsync();
         }
@@ -515,6 +515,61 @@ namespace EST.BL.Services
             _context.ItemExpenses.AddRange(items);
             var result = await _context.SaveChangesAsync() > 0;
 
+            return result;
+        }
+
+        public async Task<List<AverageMoneySpentInMonthByCategoryDTO>> GetAverageMoneySpentInMonthByCategory(Guid userId)
+        {
+            var now = DateTime.Now;
+            var thisMonthStartDate = new DateTime(now.Year, now.Month, 1);
+            var thisMonthEndDate = thisMonthStartDate.AddMonths(1).AddSeconds(-1);
+        
+            var result = await _context.Expenses
+                .Include(c => c.Category)
+                .Where(e => e.UserId == userId && e.Date > thisMonthStartDate && e.Date < thisMonthEndDate)
+                .GroupBy(c => c.Category.Name)
+                .Select(t => new AverageMoneySpentInMonthByCategoryDTO()
+                {
+                    CategoryName = t.Key,
+                    Average = t.Average(e => e.Price)
+                })
+                .ToListAsync();
+
+            return result;
+        }
+        public async Task<List<CountItemsInExpensesByCategoryDTO>> CountItemsBoughtInCategory(Guid userId)
+        {
+            var result = await _context.Expenses
+                .Include(c => c.Category)
+                .Include(ei => ei.ItemExpenses)
+                .Where(e => e.UserId == userId)
+                .GroupBy(c => c.Category.Name)
+                .Select(t => new CountItemsInExpensesByCategoryDTO()
+                {
+                    CategoryName = t.Key,
+                    Count = t.SelectMany(d => d.ItemExpenses).Count()
+                })
+                .ToListAsync();
+                
+            return result;
+        }
+        public async Task<List<AverageMoneySpentInMonthByYearDTO>> GetAverageMoneySpentInMonthByYear(Guid userId)
+        {
+            var now = DateTime.Now;
+            var thisYearStartDate = new DateTime(now.Year, 1, 1);
+            var thisYearEndDate = thisYearStartDate.AddYears(1).AddSeconds(-1);
+            
+            var result = await _context.Expenses
+                .Include(c => c.Category)
+                .Where(e => e.UserId == userId && e.Date > thisYearStartDate && e.Date < thisYearEndDate)
+                .GroupBy(c => c.Date.Month)
+                .Select(t => new AverageMoneySpentInMonthByYearDTO()
+                {
+                    MonthNumber = t.Key,
+                    Average = t.Average(e => e.Price)
+                })
+                .ToListAsync();
+            
             return result;
         }
     }

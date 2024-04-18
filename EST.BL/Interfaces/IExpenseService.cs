@@ -24,5 +24,8 @@ namespace EST.BL.Interfaces
         Task<List<LastFiveExpensesDTO>> GetLastFiveExpenses(Guid userId);
         Task<MonthlyOverviewDTO> GetMonthlyOverview(Guid userId, CancellationToken token);
         Task<bool> UpdateItemsToExpense(AddItemsToExpenseDTO updateDto, Guid userParseId);
+        Task<List<AverageMoneySpentInMonthByCategoryDTO>> GetAverageMoneySpentInMonthByCategory(Guid userId);
+        Task<List<CountItemsInExpensesByCategoryDTO>> CountItemsBoughtInCategory(Guid userId);
+        Task<List<AverageMoneySpentInMonthByYearDTO>> GetAverageMoneySpentInMonthByYear(Guid userId);
     }
 }
