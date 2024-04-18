@@ -1,6 +1,6 @@
 namespace EST.Domain.DTOs;
 
-public class CreatedLocationDTO
+public class DropdownLocationDTO
 {
     public Guid Id { get; set; }
     public string Name { get; set; }

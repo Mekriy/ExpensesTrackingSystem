@@ -12,7 +12,6 @@ namespace EST.DAL.DataAccess.EF
         public DbSet<Category> Categories { get; set; }
         public DbSet<Location> Locations { get; set; }
         public DbSet<Review> Reviews { get; set; }
-        public DbSet<ExpenseLocation> ExpensesLocations { get; set; }
         public DbSet<ItemExpense> ItemExpenses { get; set; }
         public DbSet<PhotoFile> PhotoFiles { get; set; }
 
@@ -25,7 +24,6 @@ namespace EST.DAL.DataAccess.EF
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.ApplyConfiguration(new CategoryConfiguration());
-            modelBuilder.ApplyConfiguration(new ExpenseLocationConfiguration());
             modelBuilder.ApplyConfiguration(new ItemConfiguration());
             modelBuilder.ApplyConfiguration(new ItemExpenseConfiguration());
             modelBuilder.ApplyConfiguration(new UserConfiguration());

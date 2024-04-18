@@ -1,4 +1,5 @@
-﻿using EST.BL.Interfaces;
+﻿using System.Security.Claims;
+using EST.BL.Interfaces;
 using EST.BL.Services;
 using EST.DAL.Models;
 using EST.Domain.DTOs;
@@ -30,18 +31,31 @@ namespace ETS.WebAPI.Controllers
             return Ok(category);
         }
         [HttpPost]
+        [Authorize]
         public async Task<IActionResult> CreateCategory([FromBody] CreateCategoryDTO categoryDto)
         {
+            Guid userId;
+            try
+            {
+                userId = Guid.Parse(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier));
+            }
+            catch (Exception e)
+            {
+                throw new ApiException()
+                {
+                    StatusCode = StatusCodes.Status422UnprocessableEntity,
+                    Title = "Invalid guid",
+                    Detail = "Can't parse user guid"
+                };
+            }
+            
             if (!ModelState.IsValid)
                 return BadRequest();
 
-            if (categoryDto == null)
+            if (categoryDto.Name == String.Empty)
                 return BadRequest("No category");
 
-            if (await _categoryService.Create(categoryDto))
-                return Ok("Category is created");
-            else
-                return StatusCode(500, "Error occured while creating category on server");
+            return Ok(await _categoryService.Create(categoryDto, userId));
         }
 
         [Authorize]
@@ -49,6 +63,35 @@ namespace ETS.WebAPI.Controllers
         public async Task<IActionResult> GetCategories()
         {
             var result = await _categoryService.GetPublic();
+            if (result.Count > 0)
+                return Ok(result);
+            throw new ApiException()
+            {
+                StatusCode = StatusCodes.Status404NotFound,
+                Title = "Not found",
+                Detail = "There is no categories"
+            };
+        }
+        [Authorize]
+        [HttpGet("users")]
+        public async Task<IActionResult> GetUsersCategories()
+        {
+            Guid userId;
+            try
+            {
+                userId = Guid.Parse(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier));
+            }
+            catch (Exception e)
+            {
+                throw new ApiException()
+                {
+                    StatusCode = StatusCodes.Status422UnprocessableEntity,
+                    Title = "Invalid guid",
+                    Detail = "Can't parse user guid"
+                };
+            }   
+            
+            var result = await _categoryService.GetUsers(userId);
             if (result.Count > 0)
                 return Ok(result);
             throw new ApiException()

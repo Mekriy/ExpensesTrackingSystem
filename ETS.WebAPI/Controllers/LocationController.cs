@@ -40,19 +40,33 @@ namespace ETS.WebAPI.Controllers
             return Ok(result);
         }
         [Authorize]
-        [HttpPost("add-location")]
-        public async Task<IActionResult> AddLocationToExpense([FromBody] AddLocationToExpenseDTO location)
+        [HttpGet]
+        public async Task<IActionResult> GetUsers()
         {
-            var result = await _locationService.AddLocationToExpense(location);
-            if (result)
-                return Ok();
-            else
+            Guid userParseId;
+            try
+            {
+                userParseId = Guid.Parse(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier));
+            }
+            catch (Exception e)
+            {
                 throw new ApiException()
                 {
-                    StatusCode = StatusCodes.Status500InternalServerError,
-                    Title = "Can't add location",
-                    Detail = "Error occured while adding location to expense"
+                    StatusCode = StatusCodes.Status422UnprocessableEntity,
+                    Title = "Something wrong with user Guid",
+                    Detail = "Error occured while parsing guid from user claims"
                 };
+            }
+
+            var result = await _locationService.GetUserSavedLocation(userParseId);
+            if (result.Count > 0)
+                return Ok(result);
+            throw new ApiException()
+            {
+                StatusCode = StatusCodes.Status404NotFound,
+                Title = "No locations",
+                Detail = "No saved locations"
+            };
         }
     }
 }

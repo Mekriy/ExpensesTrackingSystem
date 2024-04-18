@@ -39,6 +39,24 @@ namespace EST.BL.Services
                 "Date" => query.OrderByDescending(t => t.Price),
                 _ => query
             };
+
+            var now = DateTime.Now;
+            var startOfTheWeek =  DateTime.Now;
+            var endOfTheWeek = DateTime.Now.AddDays(-7);
+            
+            var startOfTheMonth =  new DateTime(now.Year, now.Month, 1);
+            var endOfTheMonth =  startOfTheMonth.AddMonths(1).AddSeconds(-1);
+            
+            var lastOfThreeMonths =  new DateTime(now.Year, now.Month + 1, 1, 0, 0, -1);
+            var firstOfThreeMonths = lastOfThreeMonths.AddMonths(-3);
+            
+            query = filter.Filter switch
+            {
+                "week" => query.Where(t => t.Date > startOfTheWeek && t.Date < endOfTheWeek),
+                "month" => query.Where(t => t.Date > startOfTheMonth && t.Date < endOfTheMonth),
+                "threeMonths" => query.Where(t => t.Date > firstOfThreeMonths && t.Date < lastOfThreeMonths),
+                _ => query
+            };
     
             query = query
                 .Skip(filter.PageNumber)
@@ -53,26 +71,34 @@ namespace EST.BL.Services
                 .ThenInclude(ie => ie.Item)
                 .ThenInclude(ir => ir.Reviews)
                 .Include(c => c.Category)
-                .Include(l => l.ExpenseLocations)
-                .ThenInclude(el => el.Location)
-                .Include(el => el.ExpenseLocations)
-                .ThenInclude(l => l.Location)
+                .Include(el => el.Location)
                 .Select(u => new PaginationExpenseItemsDTO()
                 {
                     Id = u.Id,
                     Price = u.Price,
                     Date = u.Date,
-                    CategoryName = u.Category.Name,
-                    Location = u.ExpenseLocations.Select(x => new LocationDTO()
-                    {
-                        Name = x.Location.Name,
-                        Latitude = x.Location.Latitude,
-                        Longitude = x.Location.Longitude,
-                        Address = x.Location.Address,
-                        Save = x.Location.Save
-                    }).FirstOrDefault()!,
+                    Category = _context.Categories
+                        .Where(ce => ce.Id == u.CategoryId)
+                        .Select(c => new CategoryDTO()
+                        {
+                            Id = c.Id,
+                            Name = c.Name
+                        }).First(),
+                    Location = _context.Locations
+                        .Where(l => l.Id == u.LocationId)
+                        .Select(x => new DropdownLocationDTO()
+                            {
+                                Id = x.Id,
+                                Name = x.Name,
+                                Latitude = x.Latitude,
+                                Longitude = x.Longitude,
+                                Address = x.Address,
+                                Save = x.Save
+                            }
+                        ).First(),
                     Items = u.ItemExpenses.Select(x => new ItemExpenseDTO()
                     {
+                        Id = x.Item.Id,
                         Name = x.Item.Name,
                         Price = x.Item.Price,
                         Quantity = x.Quantity,
@@ -117,13 +143,32 @@ namespace EST.BL.Services
                 "Date" => query.OrderByDescending(t => t.Price),
                 _ => query
             };
+            
+            var now = DateTime.Now;
+            var startOfTheWeek = DateTime.Now;
+            var endOfTheWeek = DateTime.Now.AddDays(-7);
 
+            var startOfTheMonth = new DateTime(now.Year, now.Month, 1);
+            var endOfTheMonth = startOfTheMonth.AddMonths(1).AddSeconds(-1);
+
+            var lastOfThreeMonths = new DateTime(now.Year, now.Month + 1, 1, 0, 0, 0);
+            lastOfThreeMonths = lastOfThreeMonths.AddSeconds(-1);
+            var firstOfThreeMonths = lastOfThreeMonths.AddMonths(-3);
+            
+            query = filter.Filter switch
+            {
+                "week" => query.Where(t => t.Date > startOfTheWeek && t.Date < endOfTheWeek),
+                "month" => query.Where(t => t.Date > startOfTheMonth && t.Date < endOfTheMonth),
+                "threeMonths" => query.Where(t => t.Date > firstOfThreeMonths && t.Date < lastOfThreeMonths),
+                _ => query
+            };
+
+            var totalRecords = await query.Where(e => e.UserId == userId).CountAsync();
+            var totalPages = (int)Math.Ceiling(totalRecords / (double)filter.PageSize);
+            
             query = query
                 .Skip(filter.PageNumber)
                 .Take(filter.PageSize);
-
-            var totalRecords = await _context.Expenses.Where(u => u.UserId == userId).CountAsync();
-            var totalPages = (int)Math.Ceiling(totalRecords / (double)filter.PageSize);
             
             var result = await query
                 .Where(u => u.UserId == userId)
@@ -131,26 +176,34 @@ namespace EST.BL.Services
                 .ThenInclude(ie => ie.Item)
                 .ThenInclude(ir => ir.Reviews)
                 .Include(c => c.Category)
-                .Include(l => l.ExpenseLocations)
-                .ThenInclude(el => el.Location)
-                .Include(el => el.ExpenseLocations)
-                .ThenInclude(l => l.Location)
+                .Include(l => l.Location)
                 .Select(u => new PaginationExpenseItemsDTO()
                 {
                     Id = u.Id,
                     Price = u.Price,
                     Date = u.Date,
-                    CategoryName = u.Category.Name,
-                    Location = u.ExpenseLocations.Select(x => new LocationDTO()
-                    {
-                        Name = x.Location.Name,
-                        Latitude = x.Location.Latitude,
-                        Longitude = x.Location.Longitude,
-                        Address = x.Location.Address,
-                        Save = x.Location.Save
-                    }).FirstOrDefault(),
+                    Category = _context.Categories
+                        .Where(ce => ce.Id == u.CategoryId)
+                        .Select(c => new CategoryDTO()
+                        {
+                            Id = c.Id,
+                            Name = c.Name
+                        }).First(),
+                    Location = _context.Locations
+                        .Where(l => l.Id == u.LocationId)
+                        .Select(x => new DropdownLocationDTO()
+                            {
+                                Id = x.Id,
+                                Name = x.Name,
+                                Latitude = x.Latitude,
+                                Longitude = x.Longitude,
+                                Address = x.Address,
+                                Save = x.Save
+                            }
+                        ).First(),
                     Items = u.ItemExpenses.Select(x => new ItemExpenseDTO()
                     {
+                        Id = x.Item.Id,
                         Name = x.Item.Name,
                         Price = x.Item.Price,
                         Quantity = x.Quantity,
@@ -165,61 +218,105 @@ namespace EST.BL.Services
         }
         public async Task<ExpenseDTO> GetById(Guid id, CancellationToken token)
         {
-            var expense = await _context.Expenses.Where(e => e.Id == id).FirstOrDefaultAsync(token);
+            var expense = await _context.Expenses
+                .Include(c => c.Category)
+                .Where(e => e.Id == id).FirstOrDefaultAsync(token);
             return new ExpenseDTO()
             {
+                Id = expense.Id,
                 Date = expense.Date,
-                Price = expense.Price
+                Price = expense.Price,
+                CategoryName = expense.Category.Name
             };
         }
         public async Task<ExpenseDTO> Create(ExpenseCreateDTO expenseDto, Guid userId, CancellationToken token)
         {
+            var validateCategory = await _context.Categories
+                .Where(c => c.Id == expenseDto.CategoryId)
+                .AnyAsync();
+            if (!validateCategory)
+            {
+                throw new ApiException()
+                {
+                    StatusCode = StatusCodes.Status400BadRequest,
+                    Title = "Invalid category id",
+                    Detail = "Invalid category was passed. There is no such category on db"
+                };
+            }
             var expense = new Expense()
             {
                 Price = expenseDto.Price,
                 Date = DateTime.Now,
                 CategoryId = expenseDto.CategoryId,
+                LocationId = expenseDto.LocationId,
                 UserId = userId
             };
             await _context.Expenses.AddAsync(expense);
             if (await _context.SaveChangesAsync() > 0)
             {
                 var expenseGet = await _context.Expenses
+                    .Include(c => c.Category)
                     .Where(e => e.Date == expense.Date)
                     .FirstOrDefaultAsync(token);
                 return new ExpenseDTO()
                 {
                     Id = expenseGet.Id,
                     Price = expenseGet.Price,
-                    Date = expenseGet.Date
+                    Date = expenseGet.Date,
+                    CategoryName = expenseGet.Category.Name
                 };
             }
-            else
-                return null;
+            throw new ApiException()
+            {
+                StatusCode = StatusCodes.Status500InternalServerError,
+                Title = "Error",
+                Detail = "Error occured, expense is not created"
+            };
         }
         public async Task<ExpenseDTO> Update(ExpenseUpdateDTO expenseDto, Guid userId)
         {
             var expense = await _context.Expenses
-                .Where(e => e.Id == expenseDto.Id)
+                .Where(e => e.Id == expenseDto.Id && e.UserId == userId)
                 .FirstOrDefaultAsync();
-            if (expense == null)
-                throw new Exception("No expense found to update");
+            var category = await _context.Categories
+                .Where(c => c.Id == expenseDto.CategoryId 
+                            && (c.IsPublic || (!c.IsPublic && c.UserId == userId)))
+                .AnyAsync();
+            
+            if (expense == null || !category)
+                throw new ApiException()
+                {
+                    StatusCode = StatusCodes.Status400BadRequest,
+                    Title = "No such expense or category exists on db",
+                    Detail = "Can't update. No such expense or category exists on database"
+                };
             
             expense.Price = expenseDto.Price;
             expense.Date = expenseDto.Date;
             expense.CategoryId = expenseDto.CategoryId;
-            expense.UserId = userId;
+            expense.LocationId = expenseDto.LocationId;
             
             _context.Expenses.Update(expense);
             var isUpdated = await _context.SaveChangesAsync() > 0;
+            var updated = await _context.Expenses
+                .Include(c => c.Category)
+                .Where(e => e.Id == expenseDto.Id && e.UserId == userId)
+                .FirstOrDefaultAsync();
+            
             if (isUpdated)
                 return new ExpenseDTO()
                 {
-                    Date = expense.Date,
-                    Price = expense.Price
+                    Id = updated.Id,
+                    Date = updated.Date,
+                    Price = updated.Price,
+                    CategoryName = updated.Category.Name
                 };
-            else
-                return null;
+            throw new ApiException()
+            {
+                StatusCode = StatusCodes.Status500InternalServerError,
+                Title = "Error",
+                Detail = "Error occured, expense is not updated"
+            };
         }
         public async Task<bool> Delete(Guid id)
         {
@@ -237,14 +334,26 @@ namespace EST.BL.Services
                 {
                     StatusCode = StatusCodes.Status404NotFound,
                     Title = "No expense found",
-                    Detail = "Expense doesn't existw"
+                    Detail = "Expense doesn't exist"
                 };
                     
-            var expense = await _context.Expenses.Where(u => u.Id == id).FirstOrDefaultAsync();
+            var expense = await _context.Expenses
+                .Where(u => u.Id == id)
+                .FirstOrDefaultAsync();
             if (expense == null)
                 return false;
             _context.Expenses.Remove(expense);
             return await _context.SaveChangesAsync() > 0;
+        }
+        public async Task<bool> DeleteExpenses(List<ExpenseIdsDTO> toDelete)
+        {
+            var expenses = toDelete
+                .SelectMany(d => _context.Expenses
+                .Where(e => e.Id == d.Id).ToList()).ToList();
+            
+            _context.Expenses.RemoveRange(expenses);
+                
+            return await _context.SaveChangesAsync()>0;
         }
         public async Task<bool> AddItems(Guid userId, AddItemsToExpenseDTO itemList)
         {
@@ -391,6 +500,22 @@ namespace EST.BL.Services
         public async Task<bool> Exist(Guid id)
         {
             return await _context.Expenses.Where(i => i.Id == id).AnyAsync();
+        }
+        public async Task<bool> UpdateItemsToExpense(AddItemsToExpenseDTO updateDto, Guid userId)
+        {
+
+            var items = updateDto.Items
+                .Select(t => new ItemExpense()
+                {
+                    ExpenseId = updateDto.ExpenseId,
+                    ItemId = t.Id,
+                    Quantity = t.Quantity
+                });
+            
+            _context.ItemExpenses.AddRange(items);
+            var result = await _context.SaveChangesAsync() > 0;
+
+            return result;
         }
     }
 }
