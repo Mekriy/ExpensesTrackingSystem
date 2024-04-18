@@ -43,6 +43,21 @@ public class LocationService : ILocationService
 
     public async Task<CreatedLocationDTO> Create(LocationDTO locationDto, Guid userId)
     {
+        var validateLocation = await _context.Locations
+            .Where(l => l.Name == locationDto.Name
+                        && l.Longitude == locationDto.Longitude
+                        && l.Latitude == locationDto.Latitude
+                        && l.Address == locationDto.Address)
+            .AnyAsync();
+
+        if (validateLocation)
+            throw new ApiException()
+            {
+                StatusCode = StatusCodes.Status400BadRequest,
+                Title = "Location already exists",
+                Detail = "Can't create already existed location"
+            };
+        
         var location = new Location
         {
             Name = locationDto.Name,
@@ -63,37 +78,18 @@ public class LocationService : ILocationService
             {
                 Id = createdLocation.Id,
                 Name = createdLocation.Name,
+                Latitude = createdLocation.Latitude,
+                Longitude = createdLocation.Longitude,
+                Address = createdLocation.Address,
+                Save = createdLocation.Save
             };
         }
-        else
+        throw new ApiException()
         {
-            throw new ApiException()
-            {
-                StatusCode = StatusCodes.Status500InternalServerError,
-                Title = "Can't create location",
-                Detail = "Error occured while creating location on server"
-            };
-        }
-    }
-
-    public async Task<bool> AddLocationToExpense(AddLocationToExpenseDTO location)
-    {
-        var resultExpense = await _context.Expenses.AnyAsync(e => e.Id == location.ExpenseId);
-        var resultLocation = await _context.Locations.AnyAsync(l => l.Id == location.LocationId);
-        if (!resultExpense || !resultLocation)
-            throw new ApiException()
-            {
-                StatusCode = StatusCodes.Status400BadRequest,
-                Title = "Wrong id",
-                Detail = "There is no such location or expense with this id's on db"
-            };
-        var expenseLocation = new ExpenseLocation()
-        {
-            ExpenseId = location.ExpenseId,
-            LocationId = location.LocationId
+            StatusCode = StatusCodes.Status500InternalServerError,
+            Title = "Can't create location",
+            Detail = "Error occured while creating location on server"
         };
-        _context.ExpensesLocations.Add(expenseLocation);
-        return await _context.SaveChangesAsync() > 0;
     }
     public async Task<LocationDTO> Update(LocationDTO locationDto, Guid userId)
     {
@@ -153,62 +149,6 @@ public class LocationService : ILocationService
             StatusCode = StatusCodes.Status404NotFound,
             Title = "Not found",
             Detail = "There is no such location on the server"
-        };
-    }
-
-    public async Task<LocationDTO> UpdateLocationExpense(UpdateLocationExpenseDTO updateDto, Guid userId)
-    {
-        var validateOldLocation = await _context.Locations.Where(l => l.Id == updateDto.OldLocationId).AnyAsync();
-        var validateNewLocation = await _context.Locations.Where(l => l.Id == updateDto.NewLocationId).AnyAsync();
-
-        if (!validateNewLocation || !validateOldLocation)
-            throw new ApiException()
-            {
-                StatusCode = StatusCodes.Status404NotFound,
-                Title = "Location not found",
-                Detail = "Location not found on db"
-            };
-
-        var location = await _context.ExpensesLocations
-            .Where(l => l.ExpenseId == updateDto.ExpenseId && l.LocationId == updateDto.OldLocationId)
-            .FirstOrDefaultAsync();
-
-        _context.ExpensesLocations.Remove(location);
-        var isDeleted = await _context.SaveChangesAsync() > 0;
-        if (isDeleted)
-        {
-            var newLocation = new ExpenseLocation()
-            {
-                ExpenseId = updateDto.ExpenseId,
-                LocationId = updateDto.NewLocationId
-            };
-            _context.ExpensesLocations.Add(newLocation);
-            var isCreated = await _context.SaveChangesAsync() > 0;
-            if (isCreated)
-            {
-                return await _context.Locations
-                    .Where(l => l.Id == location.LocationId)
-                    .Select(ld => new LocationDTO()
-                    {
-                        Name = ld.Name,
-                        Latitude = ld.Latitude,
-                        Longitude = ld.Longitude,
-                        Address = ld.Address,
-                    }).FirstOrDefaultAsync();
-            }
-            throw new ApiException()
-            {
-                StatusCode = StatusCodes.Status500InternalServerError,
-                Title = "Can't update location",
-                Detail = "Error occured while updating location expense on db"
-            };
-        }
-        
-        throw new ApiException()
-        {
-            StatusCode = StatusCodes.Status500InternalServerError,
-            Title = "Can't delete location",
-            Detail = "Error occured while deleting location expense on db"
         };
     }
 }

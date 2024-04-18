@@ -115,16 +115,16 @@ namespace ETS.WebAPI
 
             var locationList = _context.Locations.ToList();
 
-            var expenseLocation = new List<ExpenseLocation>
-            {
-                new ExpenseLocation { ExpenseId = expenseList[0].Id, LocationId = locationList[0].Id},
-                new ExpenseLocation { ExpenseId = expenseList[1].Id, LocationId = locationList[1].Id},
-                new ExpenseLocation { ExpenseId = expenseList[2].Id, LocationId = locationList[2].Id},
-                new ExpenseLocation { ExpenseId = expenseList[3].Id, LocationId = locationList[3].Id},
-                new ExpenseLocation { ExpenseId = expenseList[4].Id, LocationId = locationList[4].Id}
-            };
-
-            _context.ExpensesLocations.AddRange(expenseLocation);
+            // var expenseLocation = new List<ExpenseLocation>
+            // {
+            //     new ExpenseLocation { ExpenseId = expenseList[0].Id, LocationId = locationList[0].Id},
+            //     new ExpenseLocation { ExpenseId = expenseList[1].Id, LocationId = locationList[1].Id},
+            //     new ExpenseLocation { ExpenseId = expenseList[2].Id, LocationId = locationList[2].Id},
+            //     new ExpenseLocation { ExpenseId = expenseList[3].Id, LocationId = locationList[3].Id},
+            //     new ExpenseLocation { ExpenseId = expenseList[4].Id, LocationId = locationList[4].Id}
+            // };
+            //
+            // _context.ExpensesLocations.AddRange(expenseLocation);
             _context.SaveChanges();
         }
     }

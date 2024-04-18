@@ -48,10 +48,17 @@ namespace EST.BL.Services
             }
             await _context.Categories.AddAsync(category);
             if (await _context.SaveChangesAsync() > 0)
+            {
+                var created = await _context.Categories
+                    .Where(c => c.Name == category.Name)
+                    .FirstAsync();
                 return new CategoryDTO()
                 {
-                    Name = category.Name
+                    Id = created.Id,
+                    Name = created.Name
                 };
+            }
+                
             throw new ApiException()
             {
                 StatusCode = StatusCodes.Status500InternalServerError,

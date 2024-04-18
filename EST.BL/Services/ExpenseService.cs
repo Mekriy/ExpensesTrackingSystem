@@ -71,25 +71,31 @@ namespace EST.BL.Services
                 .ThenInclude(ie => ie.Item)
                 .ThenInclude(ir => ir.Reviews)
                 .Include(c => c.Category)
-                .Include(l => l.ExpenseLocations)
-                .ThenInclude(el => el.Location)
-                .Include(el => el.ExpenseLocations)
-                .ThenInclude(l => l.Location)
+                .Include(el => el.Location)
                 .Select(u => new PaginationExpenseItemsDTO()
                 {
                     Id = u.Id,
                     Price = u.Price,
                     Date = u.Date,
-                    CategoryName = u.Category.Name,
-                    Location = u.ExpenseLocations.Select(x => new DropdownLocationDTO()
-                    {
-                        Id = x.Location.Id,
-                        Name = x.Location.Name,
-                        Latitude = x.Location.Latitude,
-                        Longitude = x.Location.Longitude,
-                        Address = x.Location.Address,
-                        Save = x.Location.Save
-                    }).FirstOrDefault()!,
+                    Category = _context.Categories
+                        .Where(ce => ce.Id == u.CategoryId)
+                        .Select(c => new CategoryDTO()
+                        {
+                            Id = c.Id,
+                            Name = c.Name
+                        }).First(),
+                    Location = _context.Locations
+                        .Where(l => l.Id == u.LocationId)
+                        .Select(x => new DropdownLocationDTO()
+                            {
+                                Id = x.Id,
+                                Name = x.Name,
+                                Latitude = x.Latitude,
+                                Longitude = x.Longitude,
+                                Address = x.Address,
+                                Save = x.Save
+                            }
+                        ).First(),
                     Items = u.ItemExpenses.Select(x => new ItemExpenseDTO()
                     {
                         Id = x.Item.Id,
@@ -170,25 +176,31 @@ namespace EST.BL.Services
                 .ThenInclude(ie => ie.Item)
                 .ThenInclude(ir => ir.Reviews)
                 .Include(c => c.Category)
-                .Include(l => l.ExpenseLocations)
-                .ThenInclude(el => el.Location)
-                .Include(el => el.ExpenseLocations)
-                .ThenInclude(l => l.Location)
+                .Include(l => l.Location)
                 .Select(u => new PaginationExpenseItemsDTO()
                 {
                     Id = u.Id,
                     Price = u.Price,
                     Date = u.Date,
-                    CategoryName = u.Category.Name,
-                    Location = u.ExpenseLocations.Select(x => new DropdownLocationDTO()
-                    {
-                        Id = x.Location.Id,
-                        Name = x.Location.Name,
-                        Latitude = x.Location.Latitude,
-                        Longitude = x.Location.Longitude,
-                        Address = x.Location.Address,
-                        Save = x.Location.Save
-                    }).FirstOrDefault(),
+                    Category = _context.Categories
+                        .Where(ce => ce.Id == u.CategoryId)
+                        .Select(c => new CategoryDTO()
+                        {
+                            Id = c.Id,
+                            Name = c.Name
+                        }).First(),
+                    Location = _context.Locations
+                        .Where(l => l.Id == u.LocationId)
+                        .Select(x => new DropdownLocationDTO()
+                            {
+                                Id = x.Id,
+                                Name = x.Name,
+                                Latitude = x.Latitude,
+                                Longitude = x.Longitude,
+                                Address = x.Address,
+                                Save = x.Save
+                            }
+                        ).First(),
                     Items = u.ItemExpenses.Select(x => new ItemExpenseDTO()
                     {
                         Id = x.Item.Id,
@@ -219,14 +231,24 @@ namespace EST.BL.Services
         }
         public async Task<ExpenseDTO> Create(ExpenseCreateDTO expenseDto, Guid userId, CancellationToken token)
         {
-            var category = await _context.Categories
-                .Where(c => c.Name == expenseDto.CategoryName)
-                .FirstOrDefaultAsync();
+            var validateCategory = await _context.Categories
+                .Where(c => c.Id == expenseDto.CategoryId)
+                .AnyAsync();
+            if (!validateCategory)
+            {
+                throw new ApiException()
+                {
+                    StatusCode = StatusCodes.Status400BadRequest,
+                    Title = "Invalid category id",
+                    Detail = "Invalid category was passed. There is no such category on db"
+                };
+            }
             var expense = new Expense()
             {
                 Price = expenseDto.Price,
                 Date = DateTime.Now,
-                CategoryId = category.Id,
+                CategoryId = expenseDto.CategoryId,
+                LocationId = expenseDto.LocationId,
                 UserId = userId
             };
             await _context.Expenses.AddAsync(expense);
@@ -257,16 +279,22 @@ namespace EST.BL.Services
                 .Where(e => e.Id == expenseDto.Id && e.UserId == userId)
                 .FirstOrDefaultAsync();
             var category = await _context.Categories
-                .Where(c => c.Name == expenseDto.CategoryName 
+                .Where(c => c.Id == expenseDto.CategoryId 
                             && (c.IsPublic || (!c.IsPublic && c.UserId == userId)))
-                .FirstOrDefaultAsync();
+                .AnyAsync();
             
-            if (expense == null)
-                throw new Exception("No expense found to update");
+            if (expense == null || !category)
+                throw new ApiException()
+                {
+                    StatusCode = StatusCodes.Status400BadRequest,
+                    Title = "No such expense or category exists on db",
+                    Detail = "Can't update. No such expense or category exists on database"
+                };
             
             expense.Price = expenseDto.Price;
             expense.Date = expenseDto.Date;
-            expense.CategoryId = category.Id;
+            expense.CategoryId = expenseDto.CategoryId;
+            expense.LocationId = expenseDto.LocationId;
             
             _context.Expenses.Update(expense);
             var isUpdated = await _context.SaveChangesAsync() > 0;

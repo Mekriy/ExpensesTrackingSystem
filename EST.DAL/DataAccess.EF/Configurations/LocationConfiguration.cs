@@ -10,6 +10,9 @@ namespace EST.DAL.DataAccess.EF.Configurations
         {
             builder
                 .HasKey(l => l.Id);
+            builder
+                .HasMany(e => e.Expenses)
+                .WithOne(l => l.Location);
         }
     }
 }

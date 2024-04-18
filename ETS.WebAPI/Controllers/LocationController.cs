@@ -40,44 +40,6 @@ namespace ETS.WebAPI.Controllers
             return Ok(result);
         }
         [Authorize]
-        [HttpPost("add-location")]
-        public async Task<IActionResult> AddLocationToExpense([FromBody] AddLocationToExpenseDTO location)
-        {
-            var result = await _locationService.AddLocationToExpense(location);
-            if (result)
-                return Ok();
-            else
-                throw new ApiException()
-                {
-                    StatusCode = StatusCodes.Status500InternalServerError,
-                    Title = "Can't add location",
-                    Detail = "Error occured while adding location to expense"
-                };
-        }
-
-        [Authorize]
-        [HttpPut]
-        public async Task<IActionResult> UpdateLocationExpense([FromBody] UpdateLocationExpenseDTO updateDto)
-        {
-            Guid userParseId;
-            try
-            {
-                userParseId = Guid.Parse(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier));
-            }
-            catch (Exception e)
-            {
-                throw new ApiException()
-                {
-                    StatusCode = StatusCodes.Status422UnprocessableEntity,
-                    Title = "Something wrong with user Guid",
-                    Detail = "Error occured while parsing guid from user claims"
-                };
-            }
-
-            var result = await _locationService.UpdateLocationExpense(updateDto, userParseId);
-            return Ok(result);
-        }
-        [Authorize]
         [HttpGet]
         public async Task<IActionResult> GetUsers()
         {

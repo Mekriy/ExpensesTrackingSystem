@@ -9,6 +9,5 @@
         public bool Save { get; set; }
         public Guid? UserId { get; set; }
         public User? User { get; set; }
-        public List<ExpenseLocation> ExpenseLocations { get; set; }
-    }
+        public List<Expense> Expenses { get; set; }    }
 }

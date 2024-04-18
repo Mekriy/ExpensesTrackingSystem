@@ -11,6 +11,7 @@
         public Guid CategoryId { get; set; }
         public Category Category { get; set; }
         public List<ItemExpense> ItemExpenses { get; set; }
-        public List<ExpenseLocation> ExpenseLocations { get; set; }
+        public Guid LocationId { get; set; }
+        public Location Location { get; set; }
     }
 }
