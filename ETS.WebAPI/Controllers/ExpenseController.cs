@@ -309,5 +309,72 @@ namespace ETS.WebAPI.Controllers
                 };
             return Ok(result);
         }
+
+        [Authorize]
+        [HttpGet("average-by-category")]
+        public async Task<IActionResult> GetAverageMoneySpentInMonthByCategory()
+        {
+            Guid userParseId;
+            try
+            {
+                userParseId = Guid.Parse(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier));
+            }
+            catch (Exception e)
+            {
+                throw new ApiException()
+                {
+                    StatusCode = StatusCodes.Status422UnprocessableEntity,
+                    Title = "Something wrong with user Guid",
+                    Detail = "Error occured while parsing guid from user claims"
+                };
+            }
+
+            var result = await _expenseService.GetAverageMoneySpentInMonthByCategory(userParseId);
+            return Ok(result);
+        }
+        [Authorize]
+        [HttpGet("count-items")]
+        public async Task<IActionResult> GetCountItemsBoughtInCategory()
+        {
+            Guid userParseId;
+            try
+            {
+                userParseId = Guid.Parse(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier));
+            }
+            catch (Exception e)
+            {
+                throw new ApiException()
+                {
+                    StatusCode = StatusCodes.Status422UnprocessableEntity,
+                    Title = "Something wrong with user Guid",
+                    Detail = "Error occured while parsing guid from user claims"
+                };
+            }
+
+            var result = await _expenseService.CountItemsBoughtInCategory(userParseId);
+            return Ok(result);
+        }
+        [Authorize]
+        [HttpGet("average-in-year")]
+        public async Task<IActionResult> GetAverageMoneySpentInMonthByYear()
+        {
+            Guid userParseId;
+            try
+            {
+                userParseId = Guid.Parse(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier));
+            }
+            catch (Exception e)
+            {
+                throw new ApiException()
+                {
+                    StatusCode = StatusCodes.Status422UnprocessableEntity,
+                    Title = "Something wrong with user Guid",
+                    Detail = "Error occured while parsing guid from user claims"
+                };
+            }
+
+            var result = await _expenseService.GetAverageMoneySpentInMonthByYear(userParseId);
+            return Ok(result);
+        }
     }
 }
