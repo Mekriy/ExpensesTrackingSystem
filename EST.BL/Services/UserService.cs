@@ -23,10 +23,12 @@ namespace EST.BL.Services
                 .Where(u => u.Id == userId)
                 .Select(x => new UserWithPhotoDTO()
                 {
+                    Id = x.Id,
                     Email = x.Email,
                     FirstName = x.FirstName,
                     LastName = x.LastName,
-                    FileName = x.PhotoFile.FileName
+                    FileName = x.PhotoFile.FileName,
+                    RoleName = x.RoleName
                 }).FirstOrDefaultAsync(token);
         }
         public async Task<UserDTO> Create(CreateUserDTO userDTO)

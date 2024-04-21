@@ -129,9 +129,9 @@ namespace EST.BL.Services
             }
 
             filter.PageNumber = filter.PageNumber < 0 ? 0 : filter.PageNumber;
-            filter.PageSize = filter.PageSize > 5 ? 5 : filter.PageSize;
+            filter.PageSize = filter.PageSize < 0 ? 5 : filter.PageSize;
             
-            IQueryable<Expense> query = _context.Expenses;
+            IQueryable<Expense> query = _context.Expenses.Where(e => e.UserId == userId);
 
             query = filter.SortColumn switch
             {
@@ -163,7 +163,7 @@ namespace EST.BL.Services
                 _ => query
             };
 
-            var totalRecords = await query.Where(e => e.UserId == userId).CountAsync();
+            var totalRecords = await query.CountAsync();
             var totalPages = (int)Math.Ceiling(totalRecords / (double)filter.PageSize);
             
             query = query
@@ -171,7 +171,6 @@ namespace EST.BL.Services
                 .Take(filter.PageSize);
             
             var result = await query
-                .Where(u => u.UserId == userId)
                 .Include(e => e.ItemExpenses)
                 .ThenInclude(ie => ie.Item)
                 .ThenInclude(ir => ir.Reviews)
