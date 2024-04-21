@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using EST.BL.Interfaces;
 using EST.BL.Services;
 using EST.DAL.DataAccess.EF;
@@ -24,6 +25,7 @@ builder.Services.AddScoped<IExpenseService, ExpenseService>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<IReviewService, ReviewService>();
 builder.Services.AddScoped<ILocationService, LocationService>();
+builder.Services.AddScoped<IAdminService, AdminService>();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Host.UseSerilog((context, configuration) =>
@@ -77,6 +79,11 @@ builder.Services.AddAuthentication(options =>
         options.TokenValidationParameters = tokenValidationParams;
     });
 
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("RequireAdminRole",
+        policy => policy.RequireClaim(ClaimTypes.Role, "Admin"));
+});
 
 var app = builder.Build();
 

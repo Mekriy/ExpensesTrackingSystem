@@ -86,7 +86,7 @@ namespace ETS.WebAPI.Controllers
 
         [Authorize]
         [HttpGet("isCreated")]
-        public async Task<IActionResult> IsUserCreated()
+        public async Task<IActionResult> IsUserCreated(CancellationToken token)
         {
             Guid userId;
             try
@@ -103,11 +103,15 @@ namespace ETS.WebAPI.Controllers
                 };
             }
 
-            var result = await _userService.Exist(userId);
-            if (result)
-                return Ok();
-            else
-                return NotFound();
+            var result = await _userService.GetById(userId, token);
+            if (result != null)
+                return Ok(result);
+            throw new ApiException()
+            {
+                StatusCode = StatusCodes.Status404NotFound,
+                Title = "User doesn't exist",
+                Detail = "User is not created!"
+            };
         }
         [HttpDelete]
         [Authorize]
@@ -185,6 +189,14 @@ namespace ETS.WebAPI.Controllers
         [HttpGet("{fileName}")]
         public async Task<IActionResult> DownloadPhoto([FromRoute] string fileName)
         {
+            if (fileName == null)
+                throw new ApiException()
+                {
+                    StatusCode = StatusCodes.Status400BadRequest,
+                    Title = "FileName is not correct",
+                    Detail = "Can't download because filename is invalid"
+                };
+            
             var result = await _manageImage.DownloadFile(fileName);
             return File(result.Item1, result.Item2, result.Item3);
         }

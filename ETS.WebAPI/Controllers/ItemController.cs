@@ -45,16 +45,6 @@ namespace ETS.WebAPI.Controllers
             var items = await _itemService.GetItems(filter, userId, token);
             return Ok(items);
         }
-        [HttpGet("review")]
-        public async Task<IActionResult> GetItemsForAdminToReview(
-            [FromQuery] PaginationFilter filter,
-            CancellationToken token)
-        {
-            var userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
-            
-            var items = await _itemService.GetItemsForAdminToReview(filter, userId, token);
-            return Ok(items);
-        }
         [HttpGet("{itemId:Guid}")]
         public async Task<IActionResult> GetItemById(
             [FromRoute] Guid itemId,
