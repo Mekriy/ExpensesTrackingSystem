@@ -93,7 +93,8 @@ namespace EST.BL.Services
         }
         private Task<IQueryable<Item>> QueryBuilder(PaginationFilter filter, string userId)
         {
-            IQueryable<Item> query = _context.Items;
+            IQueryable<Item> query = _context.Items
+                .Where(i => !i.IsDeleted);
             
             filter.PageNumber = filter.PageNumber < 0 ? 0 : filter.PageNumber;
             filter.PageSize = filter.PageSize > 5 ? 5 : filter.PageSize;
@@ -176,8 +177,8 @@ namespace EST.BL.Services
                     Title = "Not found",
                     Detail = "Can't find item on server"
                 };
-            item.Name = item.Name;
-            item.Price = item.Price;
+            item.Name = itemDto.Name;
+            item.Price = itemDto.Price;
             
             _context.Items.Update(item);
             return await SaveAsync();
