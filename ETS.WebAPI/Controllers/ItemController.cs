@@ -83,11 +83,15 @@ namespace ETS.WebAPI.Controllers
                 return BadRequest("Item already exists");
 
             if (await _itemService.Create(userId, item))
-                return Ok("Item is created");
-            else
-                return StatusCode(500, "Error occured while creating item on server");
+                return NoContent();
+            throw new ApiException()
+            {
+                StatusCode = StatusCodes.Status500InternalServerError,
+                Title = "Can't create item",
+                Detail = "Can't create item on server"
+            };
         }
-        [HttpPut("itemId:Guid")]
+        [HttpPut("{itemId:Guid}")]
         [Authorize]
         public async Task<IActionResult> UpdateItem(
             [FromRoute] Guid itemId,
@@ -114,37 +118,21 @@ namespace ETS.WebAPI.Controllers
             if (item.Name == String.Empty)
                 return BadRequest("No item");
 
-            if (!await _itemService.Exist(item.Name))
+            if (!await _itemService.Exist(itemId))
                 return BadRequest("Item doesn't exist");
 
             if (await _itemService.Update(userId, item, itemId))
-                return Ok("Item is updated!");
-            else
-                return StatusCode(500, "Error occured while updating item on server");
-        }
-        //TODO: [Authorize(Policy = "Admin")]
-        [HttpPut("{adminId:Guid}")]
-        public async Task<IActionResult> UpdateItemToPublic(
-            [FromRoute] Guid adminId, 
-            [FromBody] ItemDTO item)
-        {
-            if (!ModelState.IsValid)
-                return BadRequest();
-
-            if (item == null)
-                return BadRequest("No item");
-
-            if (!await _itemService.Exist(item.Name))
-                return BadRequest("Item doesn't exist");
-
-            if (await _itemService.UpdateToPublic(adminId, item))
-                return Ok("Item is updated!");
-            else
-                return StatusCode(500, "Error occured while updating item on server");
+                return NoContent();
+            throw new ApiException()
+            {
+                StatusCode = StatusCodes.Status500InternalServerError,
+                Title = "Can't update item",
+                Detail = "Error occured while updating item on server"
+            };
         }
         [HttpDelete("{itemId:Guid}")]
         public async Task<IActionResult> DeleteItem(
-            [FromQuery] Guid itemId)
+            [FromRoute] Guid itemId)
         {
             if (itemId == Guid.Empty)
                 return BadRequest("No guid");
@@ -153,9 +141,13 @@ namespace ETS.WebAPI.Controllers
                 return BadRequest("Item doesn't exist");
 
             if (await _itemService.SoftDelete(itemId))
-                return Ok("Item is deleted!");
-            else
-                return StatusCode(500, "Error occured while deleting item on server");
+                return NoContent();
+            throw new ApiException()
+            {
+                StatusCode = StatusCodes.Status500InternalServerError,
+                Title = "Can't delete item",
+                Detail = "Error occured while deleting item on server"
+            };
         }
     }
 }
