@@ -10,5 +10,7 @@ namespace EST.BL.Interfaces
         Task<bool> Delete(Guid id, CancellationToken token);
         Task<bool> Exist(Guid id);
         Task<bool> SaveAsync();
+        Task<UsersCreatedInfoDTO> GetUserCreatedInfo(Guid userParseId, CancellationToken token);
+        Task<UserDTO> UpdateFullName(Guid id, UpdateUserFullNameDTO fullName, CancellationToken token);
     }
 }

@@ -70,25 +70,33 @@ public class ManageImage : IManageImage
 
     private async Task<bool> CreateFile(string fileName, string _getFilePath, Guid userId)
     {
-        var photo = new PhotoFile
+        var existingPhoto = await _context.PhotoFiles.FirstOrDefaultAsync(p => p.UserId == userId);
+
+        if (existingPhoto != null)
         {
-            FileName = fileName,
-            FilePath = _getFilePath,
-            UserId = userId
-        };
-        await _context.PhotoFiles.AddAsync(photo);
+            existingPhoto.FilePath = _getFilePath;
+            _context.PhotoFiles.Update(existingPhoto);
+        }
+        else
+        {
+            var photo = new PhotoFile
+            {
+                FileName = fileName,
+                FilePath = _getFilePath,
+                UserId = userId
+            };
+            await _context.PhotoFiles.AddAsync(photo);
+        }
+
         var isSaved = await SaveAsync();
         if (isSaved)
             return true;
-        else
+        throw new ApiException()
         {
-            throw new ApiException()
-            {
-                StatusCode = StatusCodes.Status500InternalServerError,
-                Title = "Can't save photo",
-                Detail = "Error occured while creating photo on server"
-            };
-        }
+            StatusCode = StatusCodes.Status500InternalServerError,
+            Title = "Can't save photo",
+            Detail = "Error occurred while creating or updating photo on server"
+        };
     }
     private async Task<bool> SaveAsync()
     {

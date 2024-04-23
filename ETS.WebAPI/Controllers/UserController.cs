@@ -11,6 +11,7 @@ namespace ETS.WebAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class UserController : ControllerBase
     {
         private readonly IUserService _userService;
@@ -20,7 +21,6 @@ namespace ETS.WebAPI.Controllers
             _userService = userService;
             _manageImage = manageImage;
         }
-        [Authorize]
         [HttpGet]
         public async Task<IActionResult> GetById(CancellationToken token)
         {
@@ -49,7 +49,6 @@ namespace ETS.WebAPI.Controllers
                 };
             return Ok(user);
         }
-        [Authorize]
         [HttpPost]
         public async Task<IActionResult> CreateUser([FromBody] CreateUserRequestDTO userRequestDto)
         {
@@ -84,7 +83,6 @@ namespace ETS.WebAPI.Controllers
                 };
         }
 
-        [Authorize]
         [HttpGet("isCreated")]
         public async Task<IActionResult> IsUserCreated(CancellationToken token)
         {
@@ -114,7 +112,6 @@ namespace ETS.WebAPI.Controllers
             };
         }
         [HttpDelete]
-        [Authorize]
         public async Task<IActionResult> DeleteUser(CancellationToken token)
         {
             Guid userParseId;
@@ -199,6 +196,50 @@ namespace ETS.WebAPI.Controllers
             
             var result = await _manageImage.DownloadFile(fileName);
             return File(result.Item1, result.Item2, result.Item3);
+        }
+
+        [HttpGet("created")]
+        public async Task<IActionResult> GetUserCreated(CancellationToken token)
+        {
+            Guid userParseId;
+            try
+            {
+                userParseId = Guid.Parse(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier));
+            }
+            catch (Exception e)
+            {
+                throw new ApiException()
+                {
+                    StatusCode = StatusCodes.Status422UnprocessableEntity,
+                    Title = "Something wrong with user Guid",
+                    Detail = "Error occured while parsing guid from user claims"
+                };
+            }
+            var result = await _userService.GetUserCreatedInfo(userParseId, token);
+            
+            return Ok(result);
+        }
+
+        [HttpPatch]
+        public async Task<IActionResult> UpdateUserFullName([FromBody] UpdateUserFullNameDTO fullName, CancellationToken token)
+        {
+            Guid userParseId;
+            try
+            {
+                userParseId = Guid.Parse(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier));
+            }
+            catch (Exception e)
+            {
+                throw new ApiException()
+                {
+                    StatusCode = StatusCodes.Status422UnprocessableEntity,
+                    Title = "Something wrong with user Guid",
+                    Detail = "Error occured while parsing guid from user claims"
+                };
+            }
+
+            var result = await _userService.UpdateFullName(userParseId, fullName, token);
+            return Ok(result);
         }
     }
 }
