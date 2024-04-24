@@ -5,7 +5,6 @@ using EST.Domain.Helpers;
 using EST.Domain.Pagination;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.SignalR;
 
 namespace ETS.WebAPI.Controllers;
 
@@ -23,14 +22,17 @@ public class AdminController : ControllerBase
         _expenseService = expenseService;
     }
     [HttpGet]
-    public async Task<IActionResult> GetPrivateItems([FromQuery] PaginationFilter filter, CancellationToken token)
+    public async Task<IActionResult> GetPrivateItems(
+        [FromQuery] PaginationFilter filter, 
+        CancellationToken token)
     {
         var userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
         var result = await _adminService.GetItemsForAdminToReview(filter, userId, token);
             return Ok(result);
     }
     [HttpGet("statistic")]
-    public async Task<IActionResult> GetStatistic(CancellationToken token)
+    public async Task<IActionResult> GetStatistic(
+        CancellationToken token)
     {
         var result = await _adminService.GetStatistic(token);
         if(result.Count > 0)
@@ -43,7 +45,8 @@ public class AdminController : ControllerBase
         };
     }
     [HttpGet("general-info")]
-    public async Task<IActionResult> GetGeneralInfo(CancellationToken token)
+    public async Task<IActionResult> GetGeneralInfo(
+        CancellationToken token)
     {
         var result = await _adminService.GetGeneralInfo(token);
         if(result.Count > 0)
@@ -57,9 +60,25 @@ public class AdminController : ControllerBase
     }
 
     [HttpPatch]
-    public async Task<IActionResult> ChangeItemVisibility([FromBody] ItemDTO itemId, CancellationToken token)
+    public async Task<IActionResult> ChangeItemVisibility(
+        [FromBody] ItemToBePublicDTO itemId, CancellationToken token)
     {
-        if (await _adminService.ChangeItemsVisibility(itemId, token))
+        Guid adminId;
+        try
+        {
+            adminId = Guid.Parse(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier));
+        }
+        catch (Exception e)
+        {
+            throw new ApiException()
+            {
+                StatusCode = StatusCodes.Status422UnprocessableEntity,
+                Title = "Something wrong with user Guid",
+                Detail = "Error occured while parsing guid from user claims"
+            };
+        }
+        
+        if (await _adminService.ChangeItemsVisibility(itemId, adminId, token))
             return Ok();
         throw new ApiException()
         {
@@ -70,7 +89,8 @@ public class AdminController : ControllerBase
     }
 
     [HttpGet("search")]
-    public async Task<IActionResult> GetUserInfo([FromQuery] string query, CancellationToken token)
+    public async Task<IActionResult> GetUserInfo(
+        [FromQuery] string query, CancellationToken token)
     {
         var result = await _adminService.GetUsersByQuery(query, token);
         return Ok(result);
@@ -87,9 +107,43 @@ public class AdminController : ControllerBase
     }
 
     [HttpGet("users/{userId:Guid}")]
-    public async Task<IActionResult> GetUsersCreatedInfo([FromRoute] Guid userId, CancellationToken token)
+    public async Task<IActionResult> GetUsersCreatedInfo(
+        [FromRoute] Guid userId, CancellationToken token)
     {
         var result = await _adminService.GetUsersCreatedInfo(userId, token);
         return Ok(result);
+    }
+
+    [HttpGet("categories")]
+    public async Task<IActionResult> GetCategories(CancellationToken token)
+    {
+        var result = await _adminService.GetCategories(token);
+        return Ok(result);
+    }
+
+    [HttpPatch("category")]
+    public async Task<IActionResult> UpdateCategory([FromBody] UpdateCategoryDTO update, CancellationToken token)
+    {
+        if (await _adminService.UpdateCategory(update, token))
+            return NoContent();
+        throw new ApiException()
+        {
+            StatusCode = StatusCodes.Status500InternalServerError,
+            Title = "Can't update category",
+            Detail = "Error occured while updating category"
+        };
+    }
+
+    [HttpDelete("category/{categoryName}")]
+    public async Task<IActionResult> DeleteCategory([FromRoute] string categoryName, CancellationToken token)
+    { 
+        if (await _adminService.DeleteCategory(categoryName, token))
+            return NoContent();
+        throw new ApiException()
+        {
+            StatusCode = StatusCodes.Status500InternalServerError,
+            Title = "Can't delete category",
+            Detail = "Error occured while deleting category"
+        };
     }
 }

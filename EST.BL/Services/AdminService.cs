@@ -73,6 +73,7 @@ public class AdminService : IAdminService
             .Take(filter.PageSize);
 
         var result = await query
+            .Where(i => !i.IsDeleted)
             .Select(i => new ItemDTO()
             {
                 Id = i.Id,
@@ -141,13 +142,20 @@ public class AdminService : IAdminService
         };
     }
 
-    public async Task<bool> ChangeItemsVisibility(ItemDTO itemDto, CancellationToken token)
+    public async Task<bool> ChangeItemsVisibility(ItemToBePublicDTO itemDto, Guid adminId, CancellationToken token)
     {
         var item = await _context.Items
             .Where(i => !i.IsPublic && i.Id == itemDto.Id)
             .FirstOrDefaultAsync(token);
         item.IsPublic = true;
+        var review = new Review()
+        {
+            ItemId = item.Id,
+            UserId = adminId,
+            Value = itemDto.Review
+        };
         _context.Update(item);
+        _context.Reviews.Add(review);
         return await _context.SaveChangesAsync(token) > 0;
     }
 
@@ -220,5 +228,45 @@ public class AdminService : IAdminService
             Categories = result.categories,
             Locations = result.locations
         };
+    }
+
+    public async Task<List<CategoryDTO>> GetCategories(CancellationToken token)
+    {
+        return await _context.Categories.Where(c => c.IsPublic && !c.IsDeleted)
+            .Select(t => new CategoryDTO()
+            {
+                Id = t.Id,
+                Name = t.Name
+            })
+            .ToListAsync(token);
+    }
+    public async Task<bool> UpdateCategory(UpdateCategoryDTO update, CancellationToken token)
+    {
+        var category = await _context.Categories.Where(c => c.Name == update.OldName && c.IsPublic)
+            .FirstOrDefaultAsync(token);
+        category.Name = update.NewName;
+            
+        _context.Categories.Update(category);
+        return await _context.SaveChangesAsync(token) > 0;
+    }
+
+    public async Task<bool> DeleteCategory(string name, CancellationToken token)
+    {
+        var category = await _context.Categories
+            .Where(u => u.Name == name && u.IsPublic)
+            .FirstOrDefaultAsync(token);
+        if (category.IsDeleted)
+        {
+            throw new ApiException()
+            {
+                StatusCode = StatusCodes.Status400BadRequest,
+                Title = "Category is already deleted!",
+                Detail = "Error occured because category is already deleted"
+            };
+        }
+
+        category.IsDeleted = true;
+        _context.Categories.Update(category);
+        return await _context.SaveChangesAsync(token)>0;
     }
 } 

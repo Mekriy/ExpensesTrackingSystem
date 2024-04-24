@@ -16,11 +16,11 @@ public class LocationService : ILocationService
     {
         _context = context;
     }
-    public async Task<List<DropdownLocationDTO>> GetUserSavedLocation(Guid userId)
+    public async Task<List<DropdownLocationDTO>> GetUserSavedLocation(Guid userId, CancellationToken token)
     {
         var locations = await _context.Locations
             .Where(l => l.UserId == userId && l.Save == true)
-            .ToListAsync();
+            .ToListAsync(token);
         if (locations.Count > 0)
         {
             return locations.Select(l => new DropdownLocationDTO()

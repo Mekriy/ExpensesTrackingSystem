@@ -1,11 +1,9 @@
 ﻿using EST.BL.Interfaces;
-using EST.DAL.Models;
 using EST.Domain.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using EST.Domain.Helpers;
-using EST.Domain.Helpers.ErrorFilter;
 
 namespace ETS.WebAPI.Controllers
 {
@@ -184,7 +182,7 @@ namespace ETS.WebAPI.Controllers
             return Ok(result);
         }
         [HttpGet("{fileName}")]
-        public async Task<IActionResult> DownloadPhoto([FromRoute] string fileName)
+        public async Task<IActionResult> DownloadPhoto([FromRoute] string fileName, CancellationToken token)
         {
             if (fileName == null)
                 throw new ApiException()
@@ -194,7 +192,7 @@ namespace ETS.WebAPI.Controllers
                     Detail = "Can't download because filename is invalid"
                 };
             
-            var result = await _manageImage.DownloadFile(fileName);
+            var result = await _manageImage.DownloadFile(fileName, token);
             return File(result.Item1, result.Item2, result.Item3);
         }
 

@@ -89,7 +89,7 @@ namespace EST.BL.Services
             {
                 t.Id,
                 items = _context.Items
-                    .Where(i => i.UserId == t.Id)
+                    .Where(i => i.UserId == t.Id && !i.IsDeleted)
                     .Include(r => r.Reviews)
                     .Select(it => new ItemDTO()
                     {

@@ -41,11 +41,11 @@ public class ManageImage : IManageImage
         }
     }
 
-    public async Task<(byte[], string, string)> DownloadFile(string FileName)
+    public async Task<(byte[], string, string)> DownloadFile(string FileName, CancellationToken token)
     {
         try
         {
-            var file = await _context.PhotoFiles.Where(f => f.FileName == FileName).FirstOrDefaultAsync();
+            var file = await _context.PhotoFiles.Where(f => f.FileName == FileName).FirstOrDefaultAsync(token);
 
             var getFilePath = file.FilePath;
             var provider = new FileExtensionContentTypeProvider();
@@ -54,7 +54,7 @@ public class ManageImage : IManageImage
                 contentType = "application/octet-stream";
             }
 
-            var readAllBytesAsync = await File.ReadAllBytesAsync(getFilePath);
+            var readAllBytesAsync = await File.ReadAllBytesAsync(getFilePath, token);
             return (readAllBytesAsync, contentType, Path.Combine(getFilePath));
         }
         catch (Exception e)

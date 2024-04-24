@@ -8,6 +8,7 @@ public class PaginationFilter
     public string SortDirection { get; set; }
     public string? TypeItemsVisibility { get; set; }
     public string? Filter { get; set; }
+    public string? SearchCategory { get; set; }
 
     public PaginationFilter()
     {
@@ -17,6 +18,7 @@ public class PaginationFilter
         SortDirection = "asc";
         TypeItemsVisibility = "all";
         Filter = "";
+        SearchCategory = "";
     }
 
     public PaginationFilter(int pageNumber, int pageSize, string sortColumn, string sortDirection)

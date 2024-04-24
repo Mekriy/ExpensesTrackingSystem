@@ -1,9 +1,7 @@
 ﻿using System.Security.Claims;
 using EST.BL.Interfaces;
-using EST.DAL.Models;
 using EST.Domain.DTOs;
 using EST.Domain.Helpers;
-using EST.Domain.Helpers.ErrorFilter;
 using EST.Domain.Pagination;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -39,28 +37,25 @@ namespace ETS.WebAPI.Controllers
             return Ok(expenses);
         }
         [HttpGet("{expenseId:Guid}")]
-        public async Task<IActionResult> GetExpensesById([FromQuery] Guid expenseId, CancellationToken token)
+        public async Task<IActionResult> GetExpensesById(
+            [FromQuery] Guid expenseId, CancellationToken token)
         {
             var expense = await _expenseService.GetById(expenseId, token);
-            if (expense == null)
-                return BadRequest("No expense!");
             return Ok(expense);
         }
         [HttpPost]
-        public async Task<IActionResult> CreateExpense(ExpenseCreateDTO expense, CancellationToken token)
+        public async Task<IActionResult> CreateExpense(
+            ExpenseCreateDTO expense, CancellationToken token)
         {
             if (!ModelState.IsValid)
                 return BadRequest();
 
-            if (expense == null)
-                return BadRequest("No expense!");
-            
             Guid userParseId;
             try
             {
                 userParseId = Guid.Parse(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier));
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 throw new ApiException()
                 {
@@ -71,17 +66,11 @@ namespace ETS.WebAPI.Controllers
             }
 
             var createdExpense = await _expenseService.Create(expense, userParseId, token);
-            if (createdExpense != null)
-                return Ok(createdExpense);
-            throw new ApiException()
-            {
-                StatusCode = StatusCodes.Status500InternalServerError,
-                Title = "Can't create expense",
-                Detail = "Error occured while creating expense on server"
-            };
+            return Ok(createdExpense);
         }
         [HttpPut]
-        public async Task<IActionResult> UpdateExpense([FromBody] ExpenseUpdateDTO expense)
+        public async Task<IActionResult> UpdateExpense(
+            [FromBody] ExpenseUpdateDTO expense, CancellationToken token)
         {
             if (!ModelState.IsValid)
                 return BadRequest();
@@ -91,7 +80,7 @@ namespace ETS.WebAPI.Controllers
             {
                 userParseId = Guid.Parse(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier));
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 throw new ApiException()
                 {
@@ -100,24 +89,15 @@ namespace ETS.WebAPI.Controllers
                     Detail = "Error occured while parsing guid from user claims"
                 };
             }
-            
-            if (expense == null)
-                return BadRequest("No expense");
 
-            var result = await _expenseService.Update(expense, userParseId);
-            if (result != null)
-                return Ok(result);
-            throw new ApiException()
-            {
-                StatusCode = StatusCodes.Status500InternalServerError,
-                Title = "Can't update expense",
-                Detail = "Error occured while updating expense on server"
-            };
+            var result = await _expenseService.Update(expense, userParseId, token);
+            return Ok(result);
         }
         [HttpDelete("{expenseId:Guid}")]
-        public async Task<IActionResult> DeleteExpense([FromRoute] Guid expenseId)
+        public async Task<IActionResult> DeleteExpense(
+            [FromRoute] Guid expenseId, CancellationToken token)
         {
-            if (await _expenseService.Delete(expenseId))
+            if (await _expenseService.Delete(expenseId, token))
                 return Ok("Expense is deleted!");
             throw new ApiException()
             {
@@ -129,9 +109,10 @@ namespace ETS.WebAPI.Controllers
 
         [Authorize]
         [HttpDelete("expenses")]
-        public async Task<IActionResult> DeleteExpenses([FromBody] List<ExpenseIdsDTO> toDelete)
+        public async Task<IActionResult> DeleteExpenses(
+            [FromBody] List<ExpenseIdsDTO> toDelete, CancellationToken token)
         {
-            if (await _expenseService.DeleteExpenses(toDelete))
+            if (await _expenseService.DeleteExpenses(toDelete, token))
                 return Ok("Expense is deleted!");
             throw new ApiException()
             {
@@ -142,14 +123,15 @@ namespace ETS.WebAPI.Controllers
         }
         [Authorize]
         [HttpPost("add-items")]
-        public async Task<IActionResult> AddItemsToExpense([FromBody] AddItemsToExpenseDTO itemList)
+        public async Task<IActionResult> AddItemsToExpense(
+            [FromBody] AddItemsToExpenseDTO itemList, CancellationToken token)
         {
             Guid userParseId;
             try
             {
                 userParseId = Guid.Parse(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier));
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 throw new ApiException()
                 {
@@ -158,7 +140,7 @@ namespace ETS.WebAPI.Controllers
                     Detail = "Error occured while parsing guid from user claims"
                 };
             }
-            if (await _expenseService.AddItems(userParseId, itemList))
+            if (await _expenseService.AddItems(userParseId, itemList, token))
                 return Ok(new 
                 {
                     message = "Items successfully added to expense!"
@@ -172,14 +154,15 @@ namespace ETS.WebAPI.Controllers
         }
 
         [HttpPut("items")]
-        public async Task<IActionResult> UpdateItemsToExpense([FromBody] AddItemsToExpenseDTO updateDto)
+        public async Task<IActionResult> UpdateItemsToExpense(
+            [FromBody] AddItemsToExpenseDTO updateDto, CancellationToken token)
         {
             Guid userParseId;
             try
             {
                 userParseId = Guid.Parse(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier));
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 throw new ApiException()
                 {
@@ -189,7 +172,7 @@ namespace ETS.WebAPI.Controllers
                 };
             }
 
-            var result = await _expenseService.UpdateItemsToExpense(updateDto, userParseId);
+            var result = await _expenseService.UpdateItemsToExpense(updateDto, userParseId, token);
             if (result)
                 return Ok();
             throw new ApiException()
@@ -223,14 +206,14 @@ namespace ETS.WebAPI.Controllers
         
         [Authorize]
         [HttpGet("expenses-by-category")]
-        public async Task<IActionResult> GetExpensesByCategory()
+        public async Task<IActionResult> GetExpensesByCategory(CancellationToken token)
         {
             Guid userParseId;
             try
             {
                 userParseId = Guid.Parse(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier));
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 throw new ApiException()
                 {
@@ -240,7 +223,7 @@ namespace ETS.WebAPI.Controllers
                 };
             }
             
-            var result = await _expenseService.GetExpensesCountByCategory(userParseId);
+            var result = await _expenseService.GetExpensesCountByCategory(userParseId, token);
             if(result.Count == 0 || result == null)
                 throw new ApiException()
                 {
@@ -253,14 +236,14 @@ namespace ETS.WebAPI.Controllers
 
         [Authorize]
         [HttpGet("last-five")]
-        public async Task<IActionResult> GetLastTodayFiveExpenses()
+        public async Task<IActionResult> GetLastTodayFiveExpenses(CancellationToken token)
         {
             Guid userParseId;
             try
             {
                 userParseId = Guid.Parse(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier));
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 throw new ApiException()
                 {
@@ -270,7 +253,7 @@ namespace ETS.WebAPI.Controllers
                 };
             }
 
-            var result = await _expenseService.GetLastFiveExpenses(userParseId);
+            var result = await _expenseService.GetLastFiveExpenses(userParseId, token);
             if(result.Count == 0 || result == null)
                 throw new ApiException()
                 {
@@ -290,7 +273,7 @@ namespace ETS.WebAPI.Controllers
             {
                 userParseId = Guid.Parse(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier));
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 throw new ApiException()
                 {
@@ -312,14 +295,14 @@ namespace ETS.WebAPI.Controllers
 
         [Authorize]
         [HttpGet("average-by-category")]
-        public async Task<IActionResult> GetAverageMoneySpentInMonthByCategory()
+        public async Task<IActionResult> GetAverageMoneySpentInMonthByCategory(CancellationToken token)
         {
             Guid userParseId;
             try
             {
                 userParseId = Guid.Parse(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier));
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 throw new ApiException()
                 {
@@ -329,19 +312,19 @@ namespace ETS.WebAPI.Controllers
                 };
             }
 
-            var result = await _expenseService.GetAverageMoneySpentInMonthByCategory(userParseId);
+            var result = await _expenseService.GetAverageMoneySpentInMonthByCategory(userParseId, token);
             return Ok(result);
         }
         [Authorize]
         [HttpGet("count-items")]
-        public async Task<IActionResult> GetCountItemsBoughtInCategory()
+        public async Task<IActionResult> GetCountItemsBoughtInCategory(CancellationToken token)
         {
             Guid userParseId;
             try
             {
                 userParseId = Guid.Parse(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier));
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 throw new ApiException()
                 {
@@ -351,19 +334,19 @@ namespace ETS.WebAPI.Controllers
                 };
             }
 
-            var result = await _expenseService.CountItemsBoughtInCategory(userParseId);
+            var result = await _expenseService.CountItemsBoughtInCategory(userParseId, token);
             return Ok(result);
         }
         [Authorize]
         [HttpGet("average-in-year")]
-        public async Task<IActionResult> GetAverageMoneySpentInMonthByYear()
+        public async Task<IActionResult> GetAverageMoneySpentInMonthByYear(CancellationToken token)
         {
             Guid userParseId;
             try
             {
                 userParseId = Guid.Parse(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier));
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 throw new ApiException()
                 {
@@ -373,7 +356,7 @@ namespace ETS.WebAPI.Controllers
                 };
             }
 
-            var result = await _expenseService.GetAverageMoneySpentInMonthByYear(userParseId);
+            var result = await _expenseService.GetAverageMoneySpentInMonthByYear(userParseId, token);
             return Ok(result);
         }
     }

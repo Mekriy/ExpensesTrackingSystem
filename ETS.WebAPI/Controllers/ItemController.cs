@@ -76,7 +76,7 @@ namespace ETS.WebAPI.Controllers
                 };
             }
             
-            if (item.Name == String.Empty)
+            if (string.IsNullOrEmpty(item.Name))
                 return BadRequest("No item");
 
             if (await _itemService.Exist(item.Name))
@@ -115,7 +115,7 @@ namespace ETS.WebAPI.Controllers
                 };
             }
             
-            if (item.Name == String.Empty)
+            if (string.IsNullOrEmpty(item.Name))
                 return BadRequest("No item");
 
             if (!await _itemService.Exist(itemId))

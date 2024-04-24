@@ -19,9 +19,9 @@ namespace EST.BL.Services
         {
             return await _context.Categories.Where(i => i.Id == id).FirstOrDefaultAsync(token);
         }
-        public async Task<CategoryDTO> Create(CreateCategoryDTO categoryDTO, Guid userId)
+        public async Task<CategoryDTO> Create(CreateCategoryDTO categoryDTO, Guid userId, CancellationToken token)
         {
-            var user = await _context.Users.Where(i => i.Id == userId).FirstOrDefaultAsync();
+            var user = await _context.Users.Where(i => i.Id == userId).FirstOrDefaultAsync(token);
             if (user == null)
                 return null;
 
@@ -46,12 +46,12 @@ namespace EST.BL.Services
                     UserId = userId,
                 };
             }
-            await _context.Categories.AddAsync(category);
-            if (await _context.SaveChangesAsync() > 0)
+            await _context.Categories.AddAsync(category, token);
+            if (await _context.SaveChangesAsync(token) > 0)
             {
                 var created = await _context.Categories
                     .Where(c => c.Name == category.Name)
-                    .FirstAsync();
+                    .FirstAsync(token);
                 return new CategoryDTO()
                 {
                     Id = created.Id,
@@ -66,40 +66,39 @@ namespace EST.BL.Services
                 Detail = "Error occured while creating category on server"
             };
         }
-        public async Task<bool> Update(UpdateCategoryDTO categoryDTO)
+        public async Task<bool> Update(UpdateCategoryDTO categoryDTO, Guid userId, CancellationToken token)
         {
-            var category = await _context.Categories.Where(c => c.Name == categoryDTO.OldName).FirstOrDefaultAsync();
+            var category = await _context.Categories
+                .Where(c => c.Name == categoryDTO.OldName && c.UserId == userId && !c.IsPublic)
+                .FirstOrDefaultAsync(token);
             category.Name = categoryDTO.NewName;
             
             _context.Categories.Update(category);
-            return await SaveAsync();
+            return await _context.SaveChangesAsync(token) > 0;
         }
-        public async Task<bool> Delete(Guid id)
+        public async Task<bool> Delete(string name, Guid userId, CancellationToken token)
         {
-            var category = await _context.Categories.Where(u => u.Id == id).FirstOrDefaultAsync();
-            var deletedCategory = new Category()
+            var category = await _context.Categories
+                .Where(u => u.Name == name && u.UserId == userId && !u.IsPublic)
+                .FirstOrDefaultAsync(token);
+            if (category.IsDeleted)
             {
-                Name = category.Name,
-                IsDeleted = true,
-            };
-            _context.Categories.Update(deletedCategory);
-            return await SaveAsync();
+                throw new ApiException()
+                {
+                    StatusCode = StatusCodes.Status400BadRequest,
+                    Title = "Category is already deleted!",
+                    Detail = "Error occured because category is already deleted"
+                };
+            }
+            category.IsDeleted = true;
+            _context.Categories.Update(category);
+            return await _context.SaveChangesAsync(token)>0;
         }
-        public async Task<bool> Exist(Guid id)
+        public async Task<bool> Exist(string name, Guid userId, CancellationToken token)
         {
-            return await _context.Categories.Where(i => i.Id == id).AnyAsync();
+            return await _context.Categories.Where(i => i.Name == name && i.UserId == userId).AnyAsync(token);
         }
-        public async Task<bool> Exist(string name)
-        {
-            return await _context.Categories.Where(i => i.Name == name).AnyAsync();
-        }
-        public async Task<bool> SaveAsync()
-        {
-            var saved = await _context.SaveChangesAsync();
-            return saved > 0 ? true : false;
-        }
-
-        public async Task<List<CategoryDTO>> GetPublic()
+        public async Task<List<CategoryDTO>> GetPublic(CancellationToken token)
         {
             var result = await _context.Categories
                 .Where(c => c.IsPublic)
@@ -108,19 +107,19 @@ namespace EST.BL.Services
                     Id = c.Id,
                     Name = c.Name
                 })
-                .ToListAsync();
+                .ToListAsync(token);
             return result;
         }
-        public async Task<List<CategoryDTO>> GetUsers(Guid userId)
+        public async Task<List<CategoryDTO>> GetUsers(Guid userId, CancellationToken token)
         {
             var result = await _context.Categories
-                .Where(c => c.UserId == userId)
+                .Where(c => c.UserId == userId && !c.IsDeleted)
                 .Select(c => new CategoryDTO()
                 {
                     Id = c.Id,
                     Name = c.Name
                 })
-                .ToListAsync();
+                .ToListAsync(token);
             return result;
         }
     }

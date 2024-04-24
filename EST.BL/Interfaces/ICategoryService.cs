@@ -11,13 +11,11 @@ namespace EST.BL.Interfaces
     public interface ICategoryService
     {
         Task<Category> GetById(Guid id, CancellationToken token); 
-        Task<CategoryDTO> Create(CreateCategoryDTO categoryDto, Guid userId);
-        Task<bool> Update(UpdateCategoryDTO categoryDto);
-        Task<bool> Delete(Guid id);
-        Task<bool> Exist(string name);
-        Task<bool> Exist(Guid id);
-        Task<bool> SaveAsync();
-        Task<List<CategoryDTO>> GetPublic();
-        Task<List<CategoryDTO>> GetUsers(Guid userId);
+        Task<CategoryDTO> Create(CreateCategoryDTO categoryDto, Guid userId, CancellationToken token);
+        Task<bool> Update(UpdateCategoryDTO categoryDto, Guid userId, CancellationToken token);
+        Task<bool> Delete(string name, Guid userId, CancellationToken token);
+        Task<bool> Exist(string name, Guid userId, CancellationToken token);
+        Task<List<CategoryDTO>> GetPublic(CancellationToken token);
+        Task<List<CategoryDTO>> GetUsers(Guid userId, CancellationToken token);
     }
 }

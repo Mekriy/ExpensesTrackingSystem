@@ -22,7 +22,8 @@ namespace EST.BL.Services
         {
             _context = context;
         }
-        public async Task<PagedResponse<List<PaginationExpenseItemsDTO>>> GetAll(PaginationFilter filter, CancellationToken token)
+        public async Task<PagedResponse<List<PaginationExpenseItemsDTO>>> GetAll(
+            PaginationFilter filter, CancellationToken token)
         {
             IQueryable<Expense> query = _context.Expenses;
             
@@ -111,7 +112,8 @@ namespace EST.BL.Services
                 
             return new PagedResponse<List<PaginationExpenseItemsDTO>>(result, filter.PageNumber, filter.PageSize, totalRecords, totalPages);
         }
-        public async Task<PagedResponse<List<PaginationExpenseItemsDTO>>> GetAllUserExpenses(PaginationFilter filter, string user, CancellationToken token)
+        public async Task<PagedResponse<List<PaginationExpenseItemsDTO>>> GetAllUserExpenses(
+            PaginationFilter filter, string user, CancellationToken token)
         {
             Guid userId;
             try
@@ -163,6 +165,9 @@ namespace EST.BL.Services
                 _ => query
             };
 
+            if (!string.IsNullOrEmpty(filter.SearchCategory))
+                query = query.Where(c => c.Category.Name == filter.SearchCategory);
+            
             var totalRecords = await query.CountAsync();
             var totalPages = (int)Math.Ceiling(totalRecords / (double)filter.PageSize);
             
@@ -228,7 +233,8 @@ namespace EST.BL.Services
                 CategoryName = expense.Category.Name
             };
         }
-        public async Task<ExpenseDTO> Create(ExpenseCreateDTO expenseDto, Guid userId, CancellationToken token)
+        public async Task<ExpenseDTO> Create(
+            ExpenseCreateDTO expenseDto, Guid userId, CancellationToken token)
         {
             var validateCategory = await _context.Categories
                 .Where(c => c.Id == expenseDto.CategoryId)
@@ -272,15 +278,15 @@ namespace EST.BL.Services
                 Detail = "Error occured, expense is not created"
             };
         }
-        public async Task<ExpenseDTO> Update(ExpenseUpdateDTO expenseDto, Guid userId)
+        public async Task<ExpenseDTO> Update(ExpenseUpdateDTO expenseDto, Guid userId, CancellationToken token)
         {
             var expense = await _context.Expenses
                 .Where(e => e.Id == expenseDto.Id && e.UserId == userId)
-                .FirstOrDefaultAsync();
+                .FirstOrDefaultAsync(token);
             var category = await _context.Categories
                 .Where(c => c.Id == expenseDto.CategoryId 
                             && (c.IsPublic || (!c.IsPublic && c.UserId == userId)))
-                .AnyAsync();
+                .AnyAsync(token);
             
             if (expense == null || !category)
                 throw new ApiException()
@@ -296,11 +302,11 @@ namespace EST.BL.Services
             expense.LocationId = expenseDto.LocationId;
             
             _context.Expenses.Update(expense);
-            var isUpdated = await _context.SaveChangesAsync() > 0;
+            var isUpdated = await _context.SaveChangesAsync(token) > 0;
             var updated = await _context.Expenses
                 .Include(c => c.Category)
                 .Where(e => e.Id == expenseDto.Id && e.UserId == userId)
-                .FirstOrDefaultAsync();
+                .FirstOrDefaultAsync(token);
             
             if (isUpdated)
                 return new ExpenseDTO()
@@ -317,7 +323,7 @@ namespace EST.BL.Services
                 Detail = "Error occured, expense is not updated"
             };
         }
-        public async Task<bool> Delete(Guid id)
+        public async Task<bool> Delete(Guid id, CancellationToken token)
         {
             if (id == Guid.Empty)
                 throw new ApiException()
@@ -327,7 +333,7 @@ namespace EST.BL.Services
                     Detail = "Expense guid is empty"
                 };
 
-            var isExists = await Exist(id);
+            var isExists = await Exist(id, token);
             if (!isExists)
                 throw new ApiException()
                 {
@@ -338,13 +344,13 @@ namespace EST.BL.Services
                     
             var expense = await _context.Expenses
                 .Where(u => u.Id == id)
-                .FirstOrDefaultAsync();
+                .FirstOrDefaultAsync(token);
             if (expense == null)
                 return false;
             _context.Expenses.Remove(expense);
-            return await _context.SaveChangesAsync() > 0;
+            return await _context.SaveChangesAsync(token) > 0;
         }
-        public async Task<bool> DeleteExpenses(List<ExpenseIdsDTO> toDelete)
+        public async Task<bool> DeleteExpenses(List<ExpenseIdsDTO> toDelete, CancellationToken token)
         {
             var expenses = toDelete
                 .SelectMany(d => _context.Expenses
@@ -352,9 +358,9 @@ namespace EST.BL.Services
             
             _context.Expenses.RemoveRange(expenses);
                 
-            return await _context.SaveChangesAsync()>0;
+            return await _context.SaveChangesAsync(token)>0;
         }
-        public async Task<bool> AddItems(Guid userId, AddItemsToExpenseDTO itemList)
+        public async Task<bool> AddItems(Guid userId, AddItemsToExpenseDTO itemList, CancellationToken token)
         {
             if (itemList.ExpenseId == Guid.Empty)
                 throw new ApiException()
@@ -390,16 +396,15 @@ namespace EST.BL.Services
           
             _context.ItemExpenses.AddRange(list);
 
-            var result = await _context.SaveChangesAsync() > 0;
+            var result = await _context.SaveChangesAsync(token) > 0;
             if (result)
                 return true;
-            else
-                throw new ApiException()
-                {
-                    StatusCode = StatusCodes.Status500InternalServerError,
-                    Title = "Error while saving",
-                    Detail = "Error occured while saving item expense on server"
-                };
+            throw new ApiException()
+            {
+                StatusCode = StatusCodes.Status500InternalServerError,
+                Title = "Error while saving",
+                Detail = "Error occured while saving item expense on server"
+            };
         }
 
         private async Task<bool> CheckForPrivateItems(Guid userId, List<ItemIdDTO> itemList)
@@ -428,9 +433,9 @@ namespace EST.BL.Services
                 }).ToListAsync(token);
         }
 
-        public async Task<List<CountExpensesByCategoryDTO>> GetExpensesCountByCategory(Guid userId)
+        public async Task<List<CountExpensesByCategoryDTO>> GetExpensesCountByCategory(Guid userId, CancellationToken token)
         {
-            var categories = await _context.Categories.ToListAsync();
+            var categories = await _context.Categories.ToListAsync(token);
             return await _context.Expenses
                 .Where(e => e.UserId == userId)
                 .Include(c => c.Category)
@@ -439,10 +444,10 @@ namespace EST.BL.Services
                 {
                     Name = ce.Key,
                     Count = ce.Count()
-                }).ToListAsync();
+                }).ToListAsync(token);
         }
 
-        public async Task<List<LastFiveExpensesDTO>> GetLastFiveExpenses(Guid userId)
+        public async Task<List<LastFiveExpensesDTO>> GetLastFiveExpenses(Guid userId, CancellationToken token)
         {
             var todayStart = DateTime.Today;
             var todayEnd = DateTime.Today.AddDays(1);
@@ -457,7 +462,7 @@ namespace EST.BL.Services
                     Date = cn.Date,
                     Category = cn.Category.Name
                 })
-                .ToListAsync();
+                .ToListAsync(token);
         }
 
         public async Task<MonthlyOverviewDTO> GetMonthlyOverview(Guid userId, CancellationToken token)
@@ -496,11 +501,11 @@ namespace EST.BL.Services
                 Daily = statistic.ResultDaily ?? 0
             };
         }
-        private async Task<bool> Exist(Guid id)
+        private async Task<bool> Exist(Guid id, CancellationToken token)
         {
-            return await _context.Expenses.Where(i => i.Id == id).AnyAsync();
+            return await _context.Expenses.Where(i => i.Id == id).AnyAsync(token);
         }
-        public async Task<bool> UpdateItemsToExpense(AddItemsToExpenseDTO updateDto, Guid userId)
+        public async Task<bool> UpdateItemsToExpense(AddItemsToExpenseDTO updateDto, Guid userId, CancellationToken token)
         {
 
             var items = updateDto.Items
@@ -512,12 +517,12 @@ namespace EST.BL.Services
                 });
             
             _context.ItemExpenses.AddRange(items);
-            var result = await _context.SaveChangesAsync() > 0;
+            var result = await _context.SaveChangesAsync(token) > 0;
 
             return result;
         }
 
-        public async Task<List<AverageMoneySpentInMonthByCategoryDTO>> GetAverageMoneySpentInMonthByCategory(Guid userId)
+        public async Task<List<AverageMoneySpentInMonthByCategoryDTO>> GetAverageMoneySpentInMonthByCategory(Guid userId, CancellationToken token)
         {
             var now = DateTime.Now;
             var thisMonthStartDate = new DateTime(now.Year, now.Month, 1);
@@ -532,11 +537,11 @@ namespace EST.BL.Services
                     CategoryName = t.Key,
                     Average = t.Average(e => e.Price)
                 })
-                .ToListAsync();
+                .ToListAsync(token);
 
             return result;
         }
-        public async Task<List<CountItemsInExpensesByCategoryDTO>> CountItemsBoughtInCategory(Guid userId)
+        public async Task<List<CountItemsInExpensesByCategoryDTO>> CountItemsBoughtInCategory(Guid userId, CancellationToken token)
         {
             var result = await _context.Expenses
                 .Include(c => c.Category)
@@ -548,11 +553,11 @@ namespace EST.BL.Services
                     CategoryName = t.Key,
                     Count = t.SelectMany(d => d.ItemExpenses).Count()
                 })
-                .ToListAsync();
+                .ToListAsync(token);
                 
             return result;
         }
-        public async Task<List<AverageMoneySpentInMonthByYearDTO>> GetAverageMoneySpentInMonthByYear(Guid userId)
+        public async Task<List<AverageMoneySpentInMonthByYearDTO>> GetAverageMoneySpentInMonthByYear(Guid userId, CancellationToken token)
         {
             var now = DateTime.Now;
             var thisYearStartDate = new DateTime(now.Year, 1, 1);
@@ -567,8 +572,7 @@ namespace EST.BL.Services
                     MonthNumber = t.Key,
                     Average = t.Average(e => e.Price)
                 })
-                .ToListAsync();
-            
+                .ToListAsync(token);
             return result;
         }
     }

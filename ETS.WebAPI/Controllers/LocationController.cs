@@ -41,7 +41,7 @@ namespace ETS.WebAPI.Controllers
         }
         [Authorize]
         [HttpGet]
-        public async Task<IActionResult> GetUsers()
+        public async Task<IActionResult> GetUsers(CancellationToken token)
         {
             Guid userParseId;
             try
@@ -58,7 +58,7 @@ namespace ETS.WebAPI.Controllers
                 };
             }
 
-            var result = await _locationService.GetUserSavedLocation(userParseId);
+            var result = await _locationService.GetUserSavedLocation(userParseId, token);
             if (result.Count > 0)
                 return Ok(result);
             throw new ApiException()
