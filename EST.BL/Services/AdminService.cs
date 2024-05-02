@@ -25,7 +25,8 @@ public class AdminService : IAdminService
         filter.PageNumber = filter.PageNumber < 0 ? 0 : filter.PageNumber;
         filter.PageSize = filter.PageSize > 5 ? 5 : filter.PageSize;
 
-        if (userId is not "")
+        //TODO: it's probably better to parse guid outside of the service method and pass GUID inside
+        if (!string.IsNullOrEmpty(userId))
         {
             Guid userGuid;
             try
@@ -64,7 +65,7 @@ public class AdminService : IAdminService
             "Name" => query.OrderByDescending(t => t.Price),
             _ => query
         };
-            
+        
         var totalRecords = await query.CountAsync(token);
         var totalPages = (int)Math.Ceiling(totalRecords / (double)filter.PageSize);
         
@@ -73,7 +74,7 @@ public class AdminService : IAdminService
             .Take(filter.PageSize);
 
         var result = await query
-            .Where(i => !i.IsDeleted)
+            .Where(i => !i.IsDeleted) //TODO: total records and total pages includes count of all items, including deleted, while here you take only non-deleted
             .Select(i => new ItemDTO()
             {
                 Id = i.Id,
@@ -147,6 +148,8 @@ public class AdminService : IAdminService
         var item = await _context.Items
             .Where(i => !i.IsPublic && i.Id == itemDto.Id)
             .FirstOrDefaultAsync(token);
+        
+        //TODO: FirstOrDefaultAsync means item can be null, but there are no checks
         item.IsPublic = true;
         var review = new Review()
         {
@@ -243,7 +246,7 @@ public class AdminService : IAdminService
     public async Task<bool> UpdateCategory(UpdateCategoryDTO update, CancellationToken token)
     {
         var category = await _context.Categories.Where(c => c.Name == update.OldName && c.IsPublic)
-            .FirstOrDefaultAsync(token);
+            .FirstAsync(token);
         category.Name = update.NewName;
             
         _context.Categories.Update(category);
@@ -254,7 +257,7 @@ public class AdminService : IAdminService
     {
         var category = await _context.Categories
             .Where(u => u.Name == name && u.IsPublic)
-            .FirstOrDefaultAsync(token);
+            .FirstAsync(token);
         if (category.IsDeleted)
         {
             throw new ApiException()

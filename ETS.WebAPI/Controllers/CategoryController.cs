@@ -29,28 +29,15 @@ namespace ETS.WebAPI.Controllers
             var category = await _categoryService.GetById(categoryId, token);
             
             if (category == null)
-                return BadRequest();
+                return NotFound();
             return Ok(category);
         }
         [HttpPost]
         public async Task<IActionResult> CreateCategory(
             [FromBody] CreateCategoryDTO categoryDto, CancellationToken token)
         {
-            Guid userId;
-            try
-            {
-                userId = Guid.Parse(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier));
-            }
-            catch (Exception e)
-            {
-                throw new ApiException()
-                {
-                    StatusCode = StatusCodes.Status422UnprocessableEntity,
-                    Title = "Invalid guid",
-                    Detail = "Can't parse user guid"
-                };
-            }
-            
+            var userId = GetUserId();
+
             if (!ModelState.IsValid)
                 return BadRequest();
 
@@ -76,20 +63,7 @@ namespace ETS.WebAPI.Controllers
         [HttpGet("users")]
         public async Task<IActionResult> GetUsersCategories(CancellationToken token)
         {
-            Guid userId;
-            try
-            {
-                userId = Guid.Parse(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier));
-            }
-            catch (Exception e)
-            {
-                throw new ApiException()
-                {
-                    StatusCode = StatusCodes.Status422UnprocessableEntity,
-                    Title = "Invalid guid",
-                    Detail = "Can't parse user guid"
-                };
-            }   
+            var userId = GetUserId();
             
             var result = await _categoryService.GetUsers(userId, token);
             if (result.Count > 0)
@@ -105,20 +79,7 @@ namespace ETS.WebAPI.Controllers
         [HttpPatch]
         public async Task<IActionResult> UpdateCategory([FromBody] UpdateCategoryDTO update, CancellationToken token)
         {
-            Guid userId;
-            try
-            {
-                userId = Guid.Parse(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier));
-            }
-            catch (Exception e)
-            {
-                throw new ApiException()
-                {
-                    StatusCode = StatusCodes.Status422UnprocessableEntity,
-                    Title = "Invalid guid",
-                    Detail = "Can't parse user guid"
-                };
-            }
+            var userId = GetUserId();
 
             if (await _categoryService.Update(update, userId, token))
             {
@@ -135,20 +96,8 @@ namespace ETS.WebAPI.Controllers
         [HttpDelete("{categoryName}")]
         public async Task<IActionResult> DeleteCategory([FromRoute] string categoryName, CancellationToken token)
         {
-            Guid userId;
-            try
-            {
-                userId = Guid.Parse(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier));
-            }
-            catch (Exception e)
-            {
-                throw new ApiException()
-                {
-                    StatusCode = StatusCodes.Status422UnprocessableEntity,
-                    Title = "Invalid guid",
-                    Detail = "Can't parse user guid"
-                };
-            }
+            var userId = GetUserId();
+            
             if (!await _categoryService.Exist(categoryName, userId, token))
                 return BadRequest("Category doesn't exist");
 
@@ -161,6 +110,26 @@ namespace ETS.WebAPI.Controllers
                 Title = "Can't delete category",
                 Detail = "Error occured while deleting category on server"
             };
+        }
+
+        private Guid GetUserId()
+        {
+            Guid userId;
+            try
+            {
+                userId = Guid.Parse(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier));
+            }
+            catch (Exception)
+            {
+                throw new ApiException
+                {
+                    StatusCode = StatusCodes.Status422UnprocessableEntity,
+                    Title = "Invalid guid",
+                    Detail = "Can't parse user guid"
+                };
+            }
+
+            return userId;
         }
     }
 }
