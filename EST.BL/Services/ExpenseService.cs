@@ -257,26 +257,15 @@ namespace EST.BL.Services
                 UserId = userId
             };
             await _context.Expenses.AddAsync(expense);
-            if (await _context.SaveChangesAsync() > 0)
-            {
-                var expenseGet = await _context.Expenses
-                    .Include(c => c.Category)
-                    .Where(e => e.Date == expense.Date)
-                    .FirstOrDefaultAsync(token);
-                return new ExpenseDTO()
+            await _context.SaveChangesAsync(token);
+            
+            return new ExpenseDTO()
                 {
-                    Id = expenseGet.Id,
-                    Price = expenseGet.Price,
-                    Date = expenseGet.Date,
-                    CategoryName = expenseGet.Category.Name
+                    Id = expense.Id,
+                    Price = expense.Price,
+                    Date = expense.Date,
+                    CategoryName = expense.Category.Name
                 };
-            }
-            throw new ApiException()
-            {
-                StatusCode = StatusCodes.Status500InternalServerError,
-                Title = "Error",
-                Detail = "Error occured, expense is not created"
-            };
         }
         public async Task<ExpenseDTO> Update(ExpenseUpdateDTO expenseDto, Guid userId, CancellationToken token)
         {

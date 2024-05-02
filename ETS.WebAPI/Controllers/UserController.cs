@@ -135,6 +135,7 @@ namespace ETS.WebAPI.Controllers
                     Detail = "Server didn't find user on the database"
                 };
 
+            //TODO: logic like that belongs to service layer, controller should be thick as possible
             var auth = Request.Headers.Authorization;
             using var client = new HttpClient();
             client.DefaultRequestHeaders.Add("Authorization", auth.ToString());

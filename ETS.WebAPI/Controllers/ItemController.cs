@@ -84,6 +84,9 @@ namespace ETS.WebAPI.Controllers
 
             if (await _itemService.Create(userId, item))
                 return NoContent();
+            
+            //TODO: when you create something, it's usually better to return either DTO of just ID of it
+            //TODO: so the calling side can get the details of newly created item
             throw new ApiException()
             {
                 StatusCode = StatusCodes.Status500InternalServerError,

@@ -24,12 +24,12 @@ namespace ETS.WebAPI.Controllers
             return Ok(await _reviewService.GetReveiwDTO(reviewId, token));
         }
         [HttpPost]
-        public async Task<IActionResult> CreateReview([FromBody] ReviewDTO reviewDTO)
+        public async Task<IActionResult> CreateReview([FromBody] ReviewDTO? reviewDTO)
         {
-            if (reviewDTO.ItemId == Guid.Empty)
-                return BadRequest("No guid");
             if (reviewDTO == null)
                 return BadRequest("No review");
+            if (reviewDTO.ItemId == Guid.Empty)
+                return BadRequest("No guid");
 
             if (await _reviewService.Create(reviewDTO.ItemId, reviewDTO.UserId, reviewDTO))
                 return Ok("Created successfully");
