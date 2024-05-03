@@ -5,7 +5,7 @@ public class PaginationFilter
     public int PageNumber { get; set; }
     public int PageSize { get; set; }
     public string? SortColumn { get; set; }
-    public string SortDirection { get; set; }
+    public string SortDirection { get; set; }//why it is not boolean? eg IsAscending
     public string? TypeItemsVisibility { get; set; }
     public string? Filter { get; set; }
     public string? SearchCategory { get; set; }

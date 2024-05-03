@@ -55,7 +55,7 @@ namespace EST.BL.Services
             
             return new PagedResponse<List<ItemDTO>>(result, filter.PageNumber, filter.PageSize, totalRecords, totalPages);
         }
-        public async Task<PagedResponse<List<ItemDTO>>> GetItemsForAdminToReview(PaginationFilter filter, string userId, CancellationToken token)
+        public async Task<PagedResponse<List<ItemDTO>>> GetItemsForAdminToReview(PaginationFilter filter, string userId, CancellationToken token)//not used
         {
             Guid userGuid;
             try
@@ -123,7 +123,7 @@ namespace EST.BL.Services
                 }
             }
             
-            query = filter.SortColumn switch
+            query = filter.SortColumn switch//I have seen this logic several times in different places. it can be extracted into separate service
             {
                 "Price" when filter.SortDirection == "asc" =>
                     query.OrderBy(t => t.Price),
@@ -160,7 +160,7 @@ namespace EST.BL.Services
             {
                 Name = itemDto.Name,
                 Price = itemDto.Price,
-                IsPublic = false,
+                IsPublic = false,//false is default value
                 IsDeleted = false,
                 UserId = userId
             };
