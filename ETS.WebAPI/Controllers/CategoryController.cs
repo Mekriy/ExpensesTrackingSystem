@@ -23,7 +23,7 @@ namespace ETS.WebAPI.Controllers
         public async Task<IActionResult> GetCategoryById(
             [FromRoute] Guid categoryId, CancellationToken token)
         {
-            if (categoryId == null)
+            if (categoryId == null)//guid is a value type and cannot be null
                 return BadRequest("No guid");
 
             var category = await _categoryService.GetById(categoryId, token);

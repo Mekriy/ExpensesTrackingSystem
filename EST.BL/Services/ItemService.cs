@@ -223,7 +223,7 @@ namespace EST.BL.Services
         public async Task<bool> SaveAsync()
         {
             var saved = await _context.SaveChangesAsync();
-            return saved > 0 ? true : false;
+            return saved > 0 ? true : false;//funny :)
         }
     }
 }
