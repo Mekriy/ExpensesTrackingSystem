@@ -22,7 +22,7 @@ public class AdminService : IAdminService
     {
         IQueryable<Item> query = _context.Items;
             
-        filter.PageNumber = filter.PageNumber < 0 ? 0 : filter.PageNumber;
+        filter.PageNumber = filter.PageNumber < 0 ? 0 : filter.PageNumber;//very strange. why not using uint or validate model using helpers?
         filter.PageSize = filter.PageSize > 5 ? 5 : filter.PageSize;
 
         if (userId is not "")
@@ -30,6 +30,8 @@ public class AdminService : IAdminService
             Guid userGuid;
             try
             {
+                //why do you check if such user exists? you received a token with admin claim.
+                //token can't be invalid and no one can change token body manually, it invalidates signature
                 userGuid = Guid.Parse(userId);
                 var checkUser = await _context.Users.Where(u => u.Id == userGuid).AnyAsync(token);
                 if (!checkUser)
@@ -48,7 +50,7 @@ public class AdminService : IAdminService
                 throw new ApiException()
                 {
                     StatusCode = StatusCodes.Status422UnprocessableEntity,
-                    Title = "Can't parse guid",
+                    Title = "Can't parse guid",//there is guid.tryparse method. this handing is not OK
                     Detail = "Can't parse guid. Something went wrong while doing item pagination"
                 };
             }
@@ -68,7 +70,7 @@ public class AdminService : IAdminService
         var totalRecords = await query.CountAsync(token);
         var totalPages = (int)Math.Ceiling(totalRecords / (double)filter.PageSize);
         
-        query = query
+        query = query//no need to assign this here. way better to call it down below
             .Skip(filter.PageNumber)
             .Take(filter.PageSize);
 
@@ -90,7 +92,10 @@ public class AdminService : IAdminService
 
     public async Task<List<TodaysExpensesByCategoriesDTO>> GetStatistic(CancellationToken token)
     {
-        var now = DateTime.Now;
+        var now = DateTime.Now;//very bad practice to use DateTime.Now. it depends on your time zone.
+                               //it works locally but if you want to deploy the code somewhere it will break everything.
+                               //DateTime.UtcNow is your choice
+                               //lines 96-97 are not needed. can be shortened
         var thisDayStartDate = now.Date;
         var thisDayEndDate = thisDayStartDate.AddDays(1);
 
@@ -108,7 +113,7 @@ public class AdminService : IAdminService
 
     public async Task<GeneralInfoOfTodayDTO> GetGeneralInfo(CancellationToken token)
     {
-        var now = DateTime.Now;
+        var now = DateTime.Now;//same as above
         var thisDayStartDate = now.Date;
         var thisDayEndDate = thisDayStartDate.AddDays(1);
 
@@ -130,7 +135,7 @@ public class AdminService : IAdminService
                 Count = t.Count(),
             })
             .OrderByDescending(arg => arg.Count)
-            .Take(1)
+            .Take(1)//you don't need take(1) if you make firstasync
             .FirstAsync(token);
         
         return new GeneralInfoOfTodayDTO()
@@ -186,7 +191,7 @@ public class AdminService : IAdminService
     public async Task<UsersCreatedInfoDTO> GetUsersCreatedInfo(Guid userId, CancellationToken token)
     {
         var result = await _context.Users
-            .Select(t => new
+            .Select(t => new//anonymous object is not OK. also I see a lot of routine mapping which can be extracted or automated
             {
                 t.Id,
                 items = _context.Items
@@ -240,6 +245,8 @@ public class AdminService : IAdminService
             })
             .ToListAsync(token);
     }
+
+    //don't you have an id of category? this operation is very strange. you need additional indexing in case of big number of names
     public async Task<bool> UpdateCategory(UpdateCategoryDTO update, CancellationToken token)
     {
         var category = await _context.Categories.Where(c => c.Name == update.OldName && c.IsPublic)
@@ -250,6 +257,7 @@ public class AdminService : IAdminService
         return await _context.SaveChangesAsync(token) > 0;
     }
 
+    //same as above. you can even unify methods and endpoints
     public async Task<bool> DeleteCategory(string name, CancellationToken token)
     {
         var category = await _context.Categories

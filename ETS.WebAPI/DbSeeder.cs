@@ -3,7 +3,8 @@ using EST.DAL.Models;
 
 namespace ETS.WebAPI
 {
-    public class DbSeeder
+    public class DbSeeder//custom data seed is not OK. there is entity builder extension entity.HasData(...)
+    //https://learn.microsoft.com/en-us/ef/core/modeling/data-seeding
     {
         private readonly ExpensesContext _context;
         public DbSeeder(ExpensesContext context)

@@ -17,7 +17,7 @@ public class ManageImage : IManageImage
         _context = context;
     }
 
-    public async Task<string> UploadFile(IFormFile _formfile, Guid userId)
+    public async Task<string> UploadFile(IFormFile _formfile, Guid userId)//don't start arguments with _
     {
         string FileName = "";
         try
@@ -105,7 +105,7 @@ public class ManageImage : IManageImage
     }
     private string GetStaticContentDirectory()
     {
-        var result = "C:\\Exoft\\ETS.Uploads\\";
+        var result = "C:\\Exoft\\ETS.Uploads\\";//never hadcode such things. better use relative path or extract into settings
         if (!Directory.Exists(result))
         {
             Directory.CreateDirectory(result);

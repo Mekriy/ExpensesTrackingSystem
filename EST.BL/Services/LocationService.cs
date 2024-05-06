@@ -141,7 +141,7 @@ public class LocationService : ILocationService
         if (location != null)
         {
             _context.Locations.Remove(location);
-            return await _context.SaveChangesAsync() > 0 ? true : false;
+            return await _context.SaveChangesAsync() > 0 ? true : false;// this part '? true : false;' is useless
         }
 
         throw new ApiException()

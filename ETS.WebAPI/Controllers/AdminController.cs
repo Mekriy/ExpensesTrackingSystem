@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace ETS.WebAPI.Controllers;
 
+//unclear schema. it is very unobvious how to use your resources
 [Route("api/[controller]")]
 [Authorize(Policy = "RequireAdminRole")]
 [ApiController]
@@ -26,9 +27,9 @@ public class AdminController : ControllerBase
         [FromQuery] PaginationFilter filter, 
         CancellationToken token)
     {
-        var userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);//not OK to do it here. better move to separate service
         var result = await _adminService.GetItemsForAdminToReview(filter, userId, token);
-            return Ok(result);
+            return Ok(result);//strange tabulation
     }
     [HttpGet("statistic")]
     public async Task<IActionResult> GetStatistic(
@@ -37,7 +38,7 @@ public class AdminController : ControllerBase
         var result = await _adminService.GetStatistic(token);
         if(result.Count > 0)
            return Ok(result);
-        throw new ApiException()
+        throw new ApiException()//easier to return NotFound(). exception is expensive
         {
             StatusCode = StatusCodes.Status404NotFound,
             Title = "No statistic",
@@ -51,7 +52,7 @@ public class AdminController : ControllerBase
         var result = await _adminService.GetGeneralInfo(token);
         if(result.Count > 0)
             return Ok(result);
-        throw new ApiException()
+        throw new ApiException()//same as above
         {
             StatusCode = StatusCodes.Status404NotFound,
             Title = "No general info",
@@ -64,11 +65,11 @@ public class AdminController : ControllerBase
         [FromBody] ItemToBePublicDTO itemId, CancellationToken token)
     {
         Guid adminId;
-        try
+        try//same as above. better move to separate service
         {
             adminId = Guid.Parse(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier));
         }
-        catch (Exception e)
+        catch (Exception e)//say no to exceptions in controller
         {
             throw new ApiException()
             {

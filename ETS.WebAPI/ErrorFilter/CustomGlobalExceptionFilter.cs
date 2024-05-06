@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Mvc.Formatters;
 
-namespace EST.Domain.Helpers.ErrorFilter;
+namespace EST.Domain.Helpers.ErrorFilter;//wrong namespace
 
 public class CustomGlobalExceptionFilter : IExceptionFilter
 {
@@ -17,6 +17,7 @@ public class CustomGlobalExceptionFilter : IExceptionFilter
 
     public void OnException(ExceptionContext context)
     {
+        //you can make 1 switch instead of 3 and return a tuple or some kind of model
         var statusCode = context.Exception switch
         {
             ApiException apiException => apiException.StatusCode,

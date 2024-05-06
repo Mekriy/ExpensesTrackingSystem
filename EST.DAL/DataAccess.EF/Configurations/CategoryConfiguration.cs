@@ -13,6 +13,7 @@ namespace EST.DAL.DataAccess.EF.Configurations
             builder
                 .HasMany(e => e.Expenses)
                 .WithOne(c => c.Category);
+            //here you could put data seed
         }
     }
 }

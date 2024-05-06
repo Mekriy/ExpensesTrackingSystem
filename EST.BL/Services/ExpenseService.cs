@@ -112,6 +112,8 @@ namespace EST.BL.Services
                 
             return new PagedResponse<List<PaginationExpenseItemsDTO>>(result, filter.PageNumber, filter.PageSize, totalRecords, totalPages);
         }
+
+        //this method is too big and contains redundant logic
         public async Task<PagedResponse<List<PaginationExpenseItemsDTO>>> GetAllUserExpenses(
             PaginationFilter filter, string user, CancellationToken token)
         {
